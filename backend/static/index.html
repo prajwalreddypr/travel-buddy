@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Travel Buddy — MVP</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
+
+<body>
+    <main class="container">
+        <h1>Travel Buddy</h1>
+
+        <form id="quote-form" class="card">
+            <div class="row"><label>Origin<input name="origin" required /></label></div>
+            <div class="row"><label>Destination<input name="destination" required /></label></div>
+            <div class="row"><label>Start Date<input name="start_date" type="date" required /></label></div>
+            <div class="row"><label>End Date<input name="end_date" type="date" required /></label></div>
+            <div class="row"><label>Travelers<input name="travelers" type="number" min="1" value="1" required /></label>
+            </div>
+            <div class="row"><button type="submit" class="btn">Get Quote</button></div>
+        </form>
+
+        <section id="result" class="card hidden">
+            <h2>Quote</h2>
+            <div id="summary"></div>
+            <div id="breakdown"></div>
+        </section>
+        <footer class="muted">Backend API: <a href="/api/v1/quote">/api/v1/quote</a></footer>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

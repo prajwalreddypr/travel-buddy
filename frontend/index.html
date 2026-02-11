@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Travel Buddy — MVP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
+
+<body>
+    <div class="page">
+        <header class="top">
+            <div class="brand">✈️ Travel <span class="accent">Buddy</span></div>
+            <div class="subtitle">Estimate travel costs quickly — flights, stay, food & more</div>
+        </header>
+
+        <main class="container">
+            <section class="panel form-panel">
+                <form id="quote-form" novalidate>
+                    <div class="fields">
+                        <label class="field"><span>Origin</span><input name="origin" placeholder="e.g. Berlin"
+                                required /></label>
+                        <label class="field"><span>Destination</span><input name="destination" placeholder="e.g. Paris"
+                                required /></label>
+                        <label class="field half"><span>Start</span><input name="start_date" type="date"
+                                required /></label>
+                        <label class="field half"><span>End</span><input name="end_date" type="date" required /></label>
+                        <label class="field small"><span>Travelers</span><input name="travelers" type="number" min="1"
+                                value="1" required /></label>
+                    </div>
+                    <div class="actions">
+                        <button class="btn primary" type="submit" id="submit-btn">Get Estimate</button>
+                        <button class="btn ghost" type="button" id="reset-btn">Reset</button>
+                    </div>
+                    <div id="form-error" class="form-error hidden" role="alert"></div>
+                </form>
+            </section>
+
+            <section class="panel result-panel hidden" id="result">
+                <div class="result-header">
+                    <div class="result-left">
+                        <h3 id="summary">Quote</h3>
+                        <div id="meta" class="muted">Detailed breakdown below</div>
+                    </div>
+                    <div class="result-right">
+                        <div id="total" class="big-total">—</div>
+                    </div>
+                </div>
+                <div id="breakdown" class="breakdown"></div>
+                <div class="actions"><button class="btn" id="new-quote">New Quote</button></div>
+            </section>
+        </main>
+
+        <div id="loader" class="loader hidden" aria-hidden="true">Loading…</div>
+
+        <footer class="footer">API: <a href="/api/v1/quote">/api/v1/quote</a></footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
