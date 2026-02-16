@@ -21,6 +21,21 @@ function clearResult() { breakdown.innerHTML = ''; summary.textContent = 'Quote'
 resetBtn?.addEventListener('click', () => { form.reset(); clearResult() })
 newQuoteBtn?.addEventListener('click', () => { clearResult(); window.scrollTo({ top: 0, behavior: 'smooth' }) })
 
+// Real-time traveler validation
+const travelersInput = document.querySelector('input[name="travelers"]')
+const travelersWarning = document.getElementById('traveler-warning')
+if (travelersInput) {
+    travelersInput.addEventListener('input', () => {
+        const value = parseInt(travelersInput.value, 10)
+        if (value > 20) {
+            travelersWarning?.classList.remove('hidden')
+            travelersInput.value = 20
+        } else {
+            travelersWarning?.classList.add('hidden')
+        }
+    })
+}
+
 function validateForm(fd) {
     const s = fd.get('start_date'), e = fd.get('end_date')
     if (!s || !e) return 'Start and end dates are required.'
@@ -43,7 +58,7 @@ form.addEventListener('submit', async (e) => {
     const payload = { origin: fd.get('origin'), destination: fd.get('destination'), start_date: fd.get('start_date'), end_date: fd.get('end_date'), travelers: Number(fd.get('travelers') || 1) }
 
     try {
-        const res = await fetch('/api/v1/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+        const res = await fetch('http://localhost:8000/api/v1/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
         if (!res.ok) {
             const txt = await res.text()
             throw new Error(txt || res.statusText)
