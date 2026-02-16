@@ -1,1 +1,3 @@
-# api package
+"""API routes package."""
+
+__all__ = []

@@ -1,0 +1,93 @@
+2026-02-16 10:48:35 | INFO     | app.db.session | Initializing database tables...
+2026-02-16 10:48:35 | INFO     | app.db.session | Database initialized successfully
+2026-02-16 10:48:35 | INFO     | app.main | Starting Travel Buddy API v1.0.0 in development mode
+2026-02-16 10:48:35 | INFO     | app.api.v1.quote | Creating quote: Berlin -> Paris, 2026-03-18 to 2026-03-21, 2 travelers
+2026-02-16 10:48:35 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> Paris: flight($131.44), train($78.86), bus($52.58)
+2026-02-16 10:48:35 | INFO     | app.services.pricing | Trip estimate for Berlin -> Paris: $982.88 (3 days, 2 travelers, 3 transport options)
+2026-02-16 10:48:35 | INFO     | app.api.v1.quote | Quote created successfully: $982.88
+2026-02-16 10:48:35 | INFO     | app.api.v1.quote | Creating quote: Berlin -> UnknownCity, 2026-03-18 to 2026-03-23, 1 travelers
+2026-02-16 10:48:35 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> UnknownCity: flight($113.3), train($67.98), bus($45.32)
+2026-02-16 10:48:35 | INFO     | app.services.pricing | Trip estimate for Berlin -> UnknownCity: $1001.6 (5 days, 1 travelers, 3 transport options)
+2026-02-16 10:48:35 | INFO     | app.api.v1.quote | Quote created successfully: $1001.6
+2026-02-16 10:48:35 | INFO     | app.api.v1.quote | Creating quote: Berlin -> Paris, 2026-02-26 to 2026-02-26, 1 travelers
+2026-02-16 10:48:35 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> Paris: flight($63.24), train($37.94), bus($25.3)
+2026-02-16 10:48:35 | INFO     | app.services.pricing | Trip estimate for Berlin -> Paris: $281.48 (1 days, 1 travelers, 3 transport options)
+2026-02-16 10:48:35 | INFO     | app.api.v1.quote | Quote created successfully: $281.48
+2026-02-16 10:48:35 | INFO     | app.api.v1.quote | Creating quote: Berlin -> Paris, 2026-02-26 to 2026-03-03, 5 travelers
+2026-02-16 10:48:35 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> Paris: flight($341.0), train($204.6), bus($136.4)
+2026-02-16 10:48:35 | INFO     | app.services.pricing | Trip estimate for Berlin -> Paris: $2557.0 (5 days, 5 travelers, 3 transport options)
+2026-02-16 10:48:35 | INFO     | app.api.v1.quote | Quote created successfully: $2557.0
+2026-02-16 10:48:35 | INFO     | app.api.v1.quote | Creating quote: New York -> Paris, 2026-03-08 to 2026-03-13, 2 travelers
+2026-02-16 10:48:35 | INFO     | app.services.pricing | Got 3 transport options for New York -> Paris: flight($333.3), train($199.98), bus($133.32)
+2026-02-16 10:48:35 | INFO     | app.services.pricing | Trip estimate for New York -> Paris: $1866.6 (5 days, 2 travelers, 3 transport options)
+2026-02-16 10:48:35 | INFO     | app.api.v1.quote | Quote created successfully: $1866.6
+2026-02-16 10:48:37 | INFO     | app.api.v1.quote | Creating quote: Berlin -> Paris, 2026-02-26 to 2026-03-03, 1 travelers
+2026-02-16 10:48:37 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> Paris: flight($68.2), train($40.92), bus($27.28)
+2026-02-16 10:48:37 | INFO     | app.services.pricing | Trip estimate for Berlin -> Paris: $911.4 (5 days, 1 travelers, 3 transport options)
+2026-02-16 10:48:37 | INFO     | app.api.v1.quote | Quote created successfully: $911.4
+2026-02-16 10:48:37 | INFO     | app.api.v1.quote | Creating quote: Berlin -> paris, 2026-02-26 to 2026-03-03, 1 travelers
+2026-02-16 10:48:37 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> paris: flight($68.2), train($40.92), bus($27.28)
+2026-02-16 10:48:37 | INFO     | app.services.pricing | Trip estimate for Berlin -> paris: $1036.4 (5 days, 1 travelers, 3 transport options)
+2026-02-16 10:48:37 | INFO     | app.api.v1.quote | Quote created successfully: $1036.4
+2026-02-16 10:49:27 | INFO     | app.db.session | Initializing database tables...
+2026-02-16 10:49:27 | INFO     | app.db.session | Database initialized successfully
+2026-02-16 10:49:27 | INFO     | app.main | Starting Travel Buddy API v1.0.0 in development mode
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Creating quote: Berlin -> Paris, 2026-03-18 to 2026-03-21, 2 travelers
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> Paris: flight($131.44), train($78.86), bus($52.58)
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Trip estimate for Berlin -> Paris: $982.88 (3 days, 2 travelers, 3 transport options)
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Quote created successfully: $982.88
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Creating quote: Berlin -> UnknownCity, 2026-03-18 to 2026-03-23, 1 travelers
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> UnknownCity: flight($113.3), train($67.98), bus($45.32)
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Trip estimate for Berlin -> UnknownCity: $1001.6 (5 days, 1 travelers, 3 transport options)
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Quote created successfully: $1001.6
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Creating quote: Berlin -> Paris, 2026-02-26 to 2026-02-26, 1 travelers
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> Paris: flight($63.24), train($37.94), bus($25.3)
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Trip estimate for Berlin -> Paris: $281.48 (1 days, 1 travelers, 3 transport options)
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Quote created successfully: $281.48
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Creating quote: Berlin -> Paris, 2026-02-26 to 2026-03-03, 5 travelers
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> Paris: flight($341.0), train($204.6), bus($136.4)
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Trip estimate for Berlin -> Paris: $2557.0 (5 days, 5 travelers, 3 transport options)
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Quote created successfully: $2557.0
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Creating quote: New York -> Paris, 2026-03-08 to 2026-03-13, 2 travelers
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Got 3 transport options for New York -> Paris: flight($333.3), train($199.98), bus($133.32)
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Trip estimate for New York -> Paris: $1866.6 (5 days, 2 travelers, 3 transport options)
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Quote created successfully: $1866.6
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Creating quote: Berlin -> Paris, 2026-02-26 to 2026-03-03, 1 travelers
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> Paris: flight($68.2), train($40.92), bus($27.28)
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Trip estimate for Berlin -> Paris: $911.4 (5 days, 1 travelers, 3 transport options)
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Quote created successfully: $911.4
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Creating quote: Berlin -> paris, 2026-02-26 to 2026-03-03, 1 travelers
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> paris: flight($68.2), train($40.92), bus($27.28)
+2026-02-16 10:49:28 | INFO     | app.services.pricing | Trip estimate for Berlin -> paris: $1036.4 (5 days, 1 travelers, 3 transport options)
+2026-02-16 10:49:28 | INFO     | app.api.v1.quote | Quote created successfully: $1036.4
+2026-02-16 10:50:05 | INFO     | app.db.session | Initializing database tables...
+2026-02-16 10:50:05 | INFO     | app.db.session | Database initialized successfully
+2026-02-16 10:50:05 | INFO     | app.main | Starting Travel Buddy API v1.0.0 in development mode
+2026-02-16 10:50:05 | INFO     | app.api.v1.quote | Creating quote: Berlin -> Paris, 2026-03-18 to 2026-03-21, 2 travelers
+2026-02-16 10:50:05 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> Paris: flight($131.44), train($78.86), bus($52.58)
+2026-02-16 10:50:05 | INFO     | app.services.pricing | Trip estimate for Berlin -> Paris: $982.88 (3 days, 2 travelers, 3 transport options)
+2026-02-16 10:50:05 | INFO     | app.api.v1.quote | Quote created successfully: $982.88
+2026-02-16 10:50:05 | INFO     | app.api.v1.quote | Creating quote: Berlin -> UnknownCity, 2026-03-18 to 2026-03-23, 1 travelers
+2026-02-16 10:50:05 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> UnknownCity: flight($113.3), train($67.98), bus($45.32)
+2026-02-16 10:50:05 | INFO     | app.services.pricing | Trip estimate for Berlin -> UnknownCity: $1001.6 (5 days, 1 travelers, 3 transport options)
+2026-02-16 10:50:05 | INFO     | app.api.v1.quote | Quote created successfully: $1001.6
+2026-02-16 10:50:05 | INFO     | app.api.v1.quote | Creating quote: Berlin -> Paris, 2026-02-26 to 2026-02-26, 1 travelers
+2026-02-16 10:50:05 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> Paris: flight($63.24), train($37.94), bus($25.3)
+2026-02-16 10:50:05 | INFO     | app.services.pricing | Trip estimate for Berlin -> Paris: $281.48 (1 days, 1 travelers, 3 transport options)
+2026-02-16 10:50:05 | INFO     | app.api.v1.quote | Quote created successfully: $281.48
+2026-02-16 10:50:05 | INFO     | app.api.v1.quote | Creating quote: Berlin -> Paris, 2026-02-26 to 2026-03-03, 5 travelers
+2026-02-16 10:50:05 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> Paris: flight($341.0), train($204.6), bus($136.4)
+2026-02-16 10:50:05 | INFO     | app.services.pricing | Trip estimate for Berlin -> Paris: $2557.0 (5 days, 5 travelers, 3 transport options)
+2026-02-16 10:50:05 | INFO     | app.api.v1.quote | Quote created successfully: $2557.0
+2026-02-16 10:50:05 | INFO     | app.api.v1.quote | Creating quote: New York -> Paris, 2026-03-08 to 2026-03-13, 2 travelers
+2026-02-16 10:50:05 | INFO     | app.services.pricing | Got 3 transport options for New York -> Paris: flight($333.3), train($199.98), bus($133.32)
+2026-02-16 10:50:05 | INFO     | app.services.pricing | Trip estimate for New York -> Paris: $1866.6 (5 days, 2 travelers, 3 transport options)
+2026-02-16 10:50:05 | INFO     | app.api.v1.quote | Quote created successfully: $1866.6
+2026-02-16 10:50:06 | INFO     | app.api.v1.quote | Creating quote: Berlin -> Paris, 2026-02-26 to 2026-03-03, 1 travelers
+2026-02-16 10:50:06 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> Paris: flight($68.2), train($40.92), bus($27.28)
+2026-02-16 10:50:06 | INFO     | app.services.pricing | Trip estimate for Berlin -> Paris: $911.4 (5 days, 1 travelers, 3 transport options)
+2026-02-16 10:50:06 | INFO     | app.api.v1.quote | Quote created successfully: $911.4
+2026-02-16 10:50:06 | INFO     | app.api.v1.quote | Creating quote: Berlin -> paris, 2026-02-26 to 2026-03-03, 1 travelers
+2026-02-16 10:50:06 | INFO     | app.services.pricing | Got 3 transport options for Berlin -> paris: flight($68.2), train($40.92), bus($27.28)
+2026-02-16 10:50:06 | INFO     | app.services.pricing | Trip estimate for Berlin -> paris: $1036.4 (5 days, 1 travelers, 3 transport options)
+2026-02-16 10:50:06 | INFO     | app.api.v1.quote | Quote created successfully: $1036.4
