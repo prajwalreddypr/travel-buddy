@@ -5,8 +5,14 @@ const breakdown = document.getElementById('breakdown')
 const submitBtn = document.getElementById('submit-btn')
 const resetBtn = document.getElementById('reset-btn')
 const newQuoteBtn = document.getElementById('new-quote')
+const saveTripBtn = document.getElementById('save-trip')
+const saveStatus = document.getElementById('save-status')
 const loader = document.getElementById('loader')
 const formError = document.getElementById('form-error')
+
+const API_BASE = 'http://localhost:8000'
+let lastQuotePayload = null
+let lastQuoteResponse = null
 
 function formatCurrency(v) { return '$' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
 
@@ -20,12 +26,20 @@ function clearResult() { breakdown.innerHTML = ''; summary.textContent = 'Quote'
 
 resetBtn?.addEventListener('click', () => {
     form.reset()
+    saveStatus?.classList.add('hidden')
+    saveStatus.textContent = ''
     startDateWarning?.classList.add('hidden')
     endDateWarning?.classList.add('hidden')
     travelersWarning?.classList.add('hidden')
     clearResult()
 })
 newQuoteBtn?.addEventListener('click', () => { clearResult(); window.scrollTo({ top: 0, behavior: 'smooth' }) })
+
+function showSaveStatus(message) {
+    if (!saveStatus) return
+    saveStatus.textContent = message
+    saveStatus.classList.remove('hidden')
+}
 
 // Real-time traveler validation
 const travelersInput = document.querySelector('input[name="travelers"]')
@@ -135,14 +149,16 @@ form.addEventListener('submit', async (e) => {
     showLoader(true)
 
     const payload = { origin: fd.get('origin'), destination: fd.get('destination'), start_date: fd.get('start_date'), end_date: fd.get('end_date'), travelers: Number(fd.get('travelers') || 1) }
+    lastQuotePayload = payload
 
     try {
-        const res = await fetch('http://localhost:8000/api/v1/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+        const res = await fetch(`${API_BASE}/api/v1/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) })
         if (!res.ok) {
             throw new Error('Please check your inputs and try again.')
         }
         const data = await res.json()
         renderResult(data)
+        lastQuoteResponse = data
         resultPanel.classList.remove('hidden')
         document.getElementById('total').textContent = formatCurrency(data.breakdown.total)
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
@@ -183,4 +199,39 @@ function renderResult(data) {
     f.innerHTML = `<div class='option-title'>Daily Costs</div><div>Food: ${formatCurrency(data.breakdown.food)}</div><div>Misc: ${formatCurrency(data.breakdown.misc)}</div>`
     breakdown.appendChild(f); fadeIn(f)
 }
+
+saveTripBtn?.addEventListener('click', async () => {
+    if (!lastQuotePayload || !lastQuoteResponse) {
+        showSaveStatus('Generate a quote before saving your trip.')
+        return
+    }
+
+    try {
+        const authRes = await fetch(`${API_BASE}/api/v1/auth/me`, { credentials: 'include' })
+        if (!authRes.ok) {
+            window.location.href = `${API_BASE}/login?next=/profile`
+            return
+        }
+
+        const saveRes = await fetch(`${API_BASE}/api/v1/trips`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                ...lastQuotePayload,
+                transport_type: 'any',
+                breakdown: lastQuoteResponse.breakdown
+            })
+        })
+
+        if (!saveRes.ok) {
+            showSaveStatus('Could not save trip. Please try again.')
+            return
+        }
+
+        window.location.href = `${API_BASE}/profile`
+    } catch {
+        showSaveStatus('Could not save trip. Please try again.')
+    }
+})
 

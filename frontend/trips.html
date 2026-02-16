@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Travel Buddy — Saved Trips</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
+
+<body>
+    <div class="page">
+        <header class="top">
+            <div class="brand">✈️ Travel <span class="accent">Buddy</span></div>
+            <div class="subtitle">Your saved trips</div>
+        </header>
+
+        <main class="container">
+            <section class="panel">
+                <div class="auth-header">
+                    <div>
+                        <h3>Saved Trips</h3>
+                        <div class="muted">View your saved estimates</div>
+                    </div>
+                    <div id="auth-status" class="auth-status muted">Loading…</div>
+                </div>
+                <div class="actions trips-actions">
+                    <a class="btn ghost" href="/">Back to home</a>
+                    <button class="btn" type="button" id="logout-btn">Sign Out</button>
+                </div>
+                <div id="trips-list" class="trips-list"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/trips.js"></script>
+</body>
+
+</html>
