@@ -37,6 +37,14 @@ class Settings:
     
     # Payment/Transport provider timeout
     provider_timeout_seconds: int = int(os.getenv("PROVIDER_TIMEOUT", "10"))
+
+    # Auth / JWT
+    jwt_secret_key: str = os.getenv("JWT_SECRET_KEY", "change-me")
+    jwt_algorithm: str = os.getenv("JWT_ALGORITHM", "HS256")
+    jwt_access_token_exp_minutes: int = int(os.getenv("JWT_ACCESS_TOKEN_EXP_MINUTES", "60"))
+    auth_cookie_name: str = os.getenv("AUTH_COOKIE_NAME", "travel_buddy_token")
+    auth_cookie_secure: bool = os.getenv("AUTH_COOKIE_SECURE", "false").lower() in ("1", "true", "yes")
+    auth_cookie_samesite: str = os.getenv("AUTH_COOKIE_SAMESITE", "lax")
     
     def is_development(self) -> bool:
         return self.app_environment.lower() in ("development", "dev")

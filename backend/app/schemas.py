@@ -1,5 +1,6 @@
 from typing import List, Optional
-from pydantic import BaseModel, Field, field_validator, model_validator
+from datetime import datetime
+from pydantic import BaseModel, Field, field_validator, model_validator, EmailStr
 from datetime import date
 from app.core.config import settings
 
@@ -160,3 +161,46 @@ class HealthResponse(BaseModel):
     status: str = Field(..., description="Health status")
     version: str = Field(..., description="API version")
     environment: str = Field(..., description="Current environment")
+
+
+class UserCreate(BaseModel):
+    """Schema for user registration."""
+    email: EmailStr = Field(..., description="User email address")
+    password: str = Field(..., min_length=8, max_length=72, description="User password")
+
+
+class UserLogin(BaseModel):
+    """Schema for user login."""
+    email: EmailStr = Field(..., description="User email address")
+    password: str = Field(..., min_length=8, max_length=72, description="User password")
+
+
+class UserResponse(BaseModel):
+    """Schema for user response."""
+    id: int = Field(..., description="User ID")
+    email: EmailStr = Field(..., description="User email address")
+
+
+class SavedTripCreate(BaseModel):
+    """Schema for saving a trip."""
+    origin: str = Field(..., description="Origin city")
+    destination: str = Field(..., description="Destination city")
+    start_date: date = Field(..., description="Trip start date")
+    end_date: date = Field(..., description="Trip end date")
+    travelers: int = Field(..., ge=1, description="Number of travelers")
+    transport_type: Optional[str] = Field(default="any", description="Preferred transport type")
+    breakdown: Breakdown = Field(..., description="Full cost breakdown")
+
+
+class SavedTripResponse(BaseModel):
+    """Schema for saved trip response."""
+    id: int = Field(..., description="Saved trip ID")
+    created_at: datetime = Field(..., description="Saved timestamp")
+    origin: str = Field(..., description="Origin city")
+    destination: str = Field(..., description="Destination city")
+    start_date: date = Field(..., description="Trip start date")
+    end_date: date = Field(..., description="Trip end date")
+    travelers: int = Field(..., ge=1, description="Number of travelers")
+    transport_type: Optional[str] = Field(default="any", description="Preferred transport type")
+    breakdown: Breakdown = Field(..., description="Full cost breakdown")
+    total: float = Field(..., ge=0, description="Total trip cost")

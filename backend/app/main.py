@@ -8,6 +8,8 @@ import os
 import time
 
 from app.api.v1 import quote as quote_router
+from app.api.v1 import auth as auth_router
+from app.api.v1 import trips as trips_router
 from app.db.session import init_db
 from app import seed
 from app.core.config import settings
@@ -162,6 +164,45 @@ def index():
     return FileResponse(index_path)
 
 
+@app.get("/login", tags=["frontend"])
+def login_page():
+    """Serve the frontend login.html."""
+    login_path = os.path.join(frontend_root, "login.html")
+    if not os.path.exists(login_path):
+        logger.warning(f"Frontend login.html not found at {login_path}")
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "Login page not found"},
+        )
+    return FileResponse(login_path)
+
+
+@app.get("/trips", tags=["frontend"])
+def trips_page():
+    """Serve the frontend trips.html."""
+    trips_path = os.path.join(frontend_root, "trips.html")
+    if not os.path.exists(trips_path):
+        logger.warning(f"Frontend trips.html not found at {trips_path}")
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "Trips page not found"},
+        )
+    return FileResponse(trips_path)
+
+
+@app.get("/profile", tags=["frontend"])
+def profile_page():
+    """Serve the frontend profile.html."""
+    profile_path = os.path.join(frontend_root, "profile.html")
+    if not os.path.exists(profile_path):
+        logger.warning(f"Frontend profile.html not found at {profile_path}")
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "Profile page not found"},
+        )
+    return FileResponse(profile_path)
+
+
 # ===== API ROUTES =====
 
 app.include_router(
@@ -170,6 +211,24 @@ app.include_router(
     responses={
         400: {"description": "Bad request"},
         500: {"description": "Internal server error"},
+    },
+)
+
+app.include_router(
+    auth_router.router,
+    prefix="/api/v1",
+    responses={
+        401: {"description": "Unauthorized"},
+        400: {"description": "Bad request"},
+    },
+)
+
+app.include_router(
+    trips_router.router,
+    prefix="/api/v1",
+    responses={
+        401: {"description": "Unauthorized"},
+        400: {"description": "Bad request"},
     },
 )
 

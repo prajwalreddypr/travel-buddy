@@ -22,7 +22,26 @@ body {
 
 .top {
     padding: 28px 20px;
-    text-align: center
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    position: relative
+}
+
+.top-left {
+    text-align: center;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center
+}
+
+.top-right {
+    position: absolute;
+    right: 20px;
+    display: flex;
+    gap: 10px
 }
 
 .brand {
@@ -43,7 +62,10 @@ body {
 .container {
     max-width: 980px;
     margin: 18px auto;
-    padding: 18px
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center
 }
 
 .panel {
@@ -51,7 +73,9 @@ body {
     border-radius: 14px;
     padding: 18px;
     box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
-    margin-bottom: 16px
+    margin-bottom: 16px;
+    width: 100%;
+    max-width: 600px
 }
 
 .form-panel {
@@ -65,9 +89,46 @@ body {
     gap: 14px
 }
 
+.auth-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px
+}
+
+.auth-header h3 {
+    font-size: 16px;
+    margin-bottom: 4px
+}
+
+.auth-status {
+    font-size: 12px
+}
+
+.auth-fields {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 16px
+}
+
+.profile-card {
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid #eef3f8;
+    background: #fbfdff
+}
+
 .field {
     display: flex;
-    flex-direction: column
+    flex-direction: column;
+    width: 100%
 }
 
 .field.small {
@@ -93,6 +154,7 @@ input {
     padding: 12px;
     border-radius: 10px;
     border: 1px solid #e6ecf3;
+    font-size: 14px;
     transition: box-shadow .12s ease, border-color .12s ease
 }
 
@@ -106,6 +168,11 @@ input:focus {
     margin-top: 14px;
     display: flex;
     gap: 10px
+}
+
+.trips-actions {
+    margin-top: 0;
+    margin-bottom: 12px
 }
 
 .btn {
@@ -181,6 +248,18 @@ input:focus {
     background: #fbfdff
 }
 
+.trips-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px
+}
+
+.trip-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px
+}
+
 .option-title {
     font-weight: 700;
     margin-bottom: 8px
@@ -243,11 +322,76 @@ input:focus {
         grid-template-columns: repeat(2, 1fr)
     }
 
+    .auth-fields {
+        grid-template-columns: 1fr
+    }
+
+    .panel {
+        max-width: 100%
+    }
+
+    .top {
+        flex-direction: column;
+        align-items: center;
+        position: relative
+    }
+
+    .top-left {
+        width: 100%;
+        text-align: center
+    }
+
+    .top-right {
+        position: static;
+        margin-top: 12px;
+        width: 100%;
+        justify-content: center
+    }
+
+    .profile-grid {
+        grid-template-columns: 1fr
+    }
+
+    .trips-list {
+        grid-template-columns: 1fr
+    }
+
     .breakdown {
         grid-template-columns: 1fr
     }
 
     .result-right {
         text-align: left
+    }
+}
+
+@media (max-width:600px) {
+    .fields {
+        grid-template-columns: 1fr
+    }
+
+    .panel {
+        padding: 14px
+    }
+
+    .top {
+        padding: 18px 10px
+    }
+
+    .container {
+        padding: 10px
+    }
+
+    .btn {
+        padding: 8px 12px;
+        font-size: 13px
+    }
+
+    .brand {
+        font-size: 18px
+    }
+
+    .subtitle {
+        font-size: 12px
     }
 }
