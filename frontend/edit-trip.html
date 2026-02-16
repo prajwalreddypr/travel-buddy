@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Travel Buddy — Edit Trip</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
+
+<body>
+    <div class="page">
+        <header class="top">
+            <div class="top-left">
+                <div class="brand">✈️ Travel <span class="accent">Buddy</span></div>
+                <div class="subtitle">Update your trip details and get a new estimate</div>
+            </div>
+            <div class="top-right">
+                <a class="btn ghost" href="http://localhost:8000/profile">Back to Profile</a>
+            </div>
+        </header>
+
+        <main class="container">
+            <section class="panel form-panel">
+                <form id="edit-form" novalidate>
+                    <div class="fields">
+                        <label class="field"><span>Origin</span><input name="origin" placeholder="e.g. Berlin"
+                                required /></label>
+                        <label class="field"><span>Destination</span><input name="destination" placeholder="e.g. Paris"
+                                required /></label>
+                        <div class="field half field-with-note">
+                            <label><span>Start</span><input name="start_date" type="date" required /></label>
+                            <div id="start-date-warning" class="warning-message hidden" role="alert">Start date must
+                                be today or later</div>
+                        </div>
+                        <div class="field half field-with-note">
+                            <label><span>End</span><input name="end_date" type="date" required /></label>
+                            <div id="end-date-warning" class="warning-message hidden" role="alert">End date must be
+                                the same or after start date</div>
+                        </div>
+                        <div class="field small field-with-note">
+                            <label><span>Travelers</span><input name="travelers" type="number" min="1" max="20"
+                                    value="1" required /></label>
+                            <div id="traveler-warning" class="warning-message hidden" role="alert">Maximum 20
+                                passengers allowed</div>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn primary" type="submit" id="submit-btn">Get Updated Estimate</button>
+                        <a class="btn ghost" href="http://localhost:8000/profile">Cancel</a>
+                    </div>
+                    <div id="form-error" class="form-error hidden" role="alert"></div>
+                </form>
+            </section>
+
+            <section class="panel result-panel hidden" id="result">
+                <div class="result-header">
+                    <div class="result-left">
+                        <h3 id="summary">Updated Quote</h3>
+                        <div id="meta" class="muted">Detailed breakdown below</div>
+                    </div>
+                    <div class="result-right">
+                        <div id="total" class="big-total">—</div>
+                    </div>
+                </div>
+                <div id="breakdown" class="breakdown"></div>
+                <div class="actions">
+                    <button class="btn" id="new-estimate">Get Another Estimate</button>
+                    <button class="btn primary" id="save-changes">Save Changes</button>
+                </div>
+                <div id="save-status" class="muted hidden" role="status"></div>
+            </section>
+        </main>
+
+        <div id="loader" class="loader hidden" aria-hidden="true">Loading…</div>
+
+    </div>
+
+    <script src="/static/edit-trip.js"></script>
+</body>
+
+</html>

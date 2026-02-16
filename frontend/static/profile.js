@@ -18,11 +18,13 @@ function renderTrips(trips) {
 
     tripsList.innerHTML = trips.map(trip => {
         return `
-            <div class="card-small trip-card">
-                <div class="option-title">${trip.origin} → ${trip.destination}</div>
-                <div class="muted">${trip.start_date} to ${trip.end_date} · ${trip.travelers} traveler(s)</div>
-                <div class="muted" style="margin-top:6px">Total: $${Number(trip.total).toFixed(2)}</div>
-            </div>
+            <a href="${API_BASE}/edit-trip?id=${trip.id}" style="text-decoration: none; color: inherit; cursor: pointer;">
+                <div class="card-small trip-card" style="cursor: pointer; transition: background-color 0.2s ease;">
+                    <div class="option-title">${trip.origin} → ${trip.destination}</div>
+                    <div class="muted">${trip.start_date} to ${trip.end_date} · ${trip.travelers} traveler(s)</div>
+                    <div class="muted" style="margin-top:6px">Total: $${Number(trip.total).toFixed(2)}</div>
+                </div>
+            </a>
         `
     }).join('')
 }

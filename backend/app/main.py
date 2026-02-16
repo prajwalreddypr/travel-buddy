@@ -203,6 +203,19 @@ def profile_page():
     return FileResponse(profile_path)
 
 
+@app.get("/edit-trip", tags=["frontend"])
+def edit_trip_page():
+    """Serve the frontend edit-trip.html."""
+    edit_trip_path = os.path.join(frontend_root, "edit-trip.html")
+    if not os.path.exists(edit_trip_path):
+        logger.warning(f"Frontend edit-trip.html not found at {edit_trip_path}")
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "Edit trip page not found"},
+        )
+    return FileResponse(edit_trip_path)
+
+
 # ===== API ROUTES =====
 
 app.include_router(

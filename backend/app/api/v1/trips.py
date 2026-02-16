@@ -2,7 +2,7 @@
 
 import json
 from typing import List
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlmodel import Session, select
 
 from app.auth.security import get_current_user
@@ -74,3 +74,73 @@ def list_trips(
             )
         )
     return response
+
+
+@router.get("/trips/{trip_id}", response_model=SavedTripResponse)
+def get_trip(
+    trip_id: int,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> SavedTripResponse:
+    trip = session.exec(
+        select(SavedTrip).where(SavedTrip.id == trip_id).where(SavedTrip.user_id == current_user.id)
+    ).first()
+    
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    
+    breakdown = Breakdown.model_validate(json.loads(trip.breakdown_json))
+    return SavedTripResponse(
+        id=trip.id,
+        created_at=trip.created_at,
+        origin=trip.origin,
+        destination=trip.destination,
+        start_date=trip.start_date,
+        end_date=trip.end_date,
+        travelers=trip.travelers,
+        transport_type=trip.transport_type,
+        breakdown=breakdown,
+        total=trip.total,
+    )
+
+
+@router.put("/trips/{trip_id}", response_model=SavedTripResponse)
+def update_trip(
+    trip_id: int,
+    payload: SavedTripCreate,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> SavedTripResponse:
+    trip = session.exec(
+        select(SavedTrip).where(SavedTrip.id == trip_id).where(SavedTrip.user_id == current_user.id)
+    ).first()
+    
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    
+    trip.origin = payload.origin
+    trip.destination = payload.destination
+    trip.start_date = payload.start_date
+    trip.end_date = payload.end_date
+    trip.travelers = payload.travelers
+    trip.transport_type = payload.transport_type or "any"
+    trip.breakdown_json = json.dumps(payload.breakdown.model_dump())
+    trip.total = payload.breakdown.total
+    
+    session.add(trip)
+    session.commit()
+    session.refresh(trip)
+    
+    breakdown = Breakdown.model_validate(json.loads(trip.breakdown_json))
+    return SavedTripResponse(
+        id=trip.id,
+        created_at=trip.created_at,
+        origin=trip.origin,
+        destination=trip.destination,
+        start_date=trip.start_date,
+        end_date=trip.end_date,
+        travelers=trip.travelers,
+        transport_type=trip.transport_type,
+        breakdown=breakdown,
+        total=trip.total,
+    )
