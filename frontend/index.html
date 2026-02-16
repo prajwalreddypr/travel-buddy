@@ -24,13 +24,22 @@
                                 required /></label>
                         <label class="field"><span>Destination</span><input name="destination" placeholder="e.g. Paris"
                                 required /></label>
-                        <label class="field half"><span>Start</span><input name="start_date" type="date"
-                                required /></label>
-                        <label class="field half"><span>End</span><input name="end_date" type="date" required /></label>
-                        <label class="field small"><span>Travelers</span><input name="travelers" type="number" min="1"
-                                max="20" value="1" required /></label>
-                        <div id="traveler-warning" class="warning-message hidden" role="alert">Maximum 20 passengers
-                            allowed</div>
+                        <div class="field half field-with-note">
+                            <label><span>Start</span><input name="start_date" type="date" required /></label>
+                            <div id="start-date-warning" class="warning-message hidden" role="alert">Start date must
+                                be today or later</div>
+                        </div>
+                        <div class="field half field-with-note">
+                            <label><span>End</span><input name="end_date" type="date" required /></label>
+                            <div id="end-date-warning" class="warning-message hidden" role="alert">End date must be
+                                the same or after start date</div>
+                        </div>
+                        <div class="field small field-with-note">
+                            <label><span>Travelers</span><input name="travelers" type="number" min="1" max="20"
+                                    value="1" required /></label>
+                            <div id="traveler-warning" class="warning-message hidden" role="alert">Maximum 20
+                                passengers allowed</div>
+                        </div>
                     </div>
                     <div class="actions">
                         <button class="btn primary" type="submit" id="submit-btn">Get Estimate</button>
@@ -57,7 +66,6 @@
 
         <div id="loader" class="loader hidden" aria-hidden="true">Loading…</div>
 
-        <footer class="footer">API: <a href="/api/v1/quote">/api/v1/quote</a></footer>
     </div>
 
     <script src="/static/app.js"></script>

@@ -18,7 +18,13 @@ function showLoader(show = true) {
 
 function clearResult() { breakdown.innerHTML = ''; summary.textContent = 'Quote'; resultPanel.classList.add('hidden'); document.getElementById('total').textContent = '—'; formError?.classList.add('hidden'); formError.textContent = '' }
 
-resetBtn?.addEventListener('click', () => { form.reset(); clearResult() })
+resetBtn?.addEventListener('click', () => {
+    form.reset()
+    startDateWarning?.classList.add('hidden')
+    endDateWarning?.classList.add('hidden')
+    travelersWarning?.classList.add('hidden')
+    clearResult()
+})
 newQuoteBtn?.addEventListener('click', () => { clearResult(); window.scrollTo({ top: 0, behavior: 'smooth' }) })
 
 // Real-time traveler validation
@@ -36,6 +42,73 @@ if (travelersInput) {
     })
 }
 
+// Real-time start date validation
+const startDateInput = document.querySelector('input[name="start_date"]')
+const startDateWarning = document.getElementById('start-date-warning')
+const endDateInput = document.querySelector('input[name="end_date"]')
+const endDateWarning = document.getElementById('end-date-warning')
+
+function getTodayDate() {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return today
+}
+
+function setStartDateMin() {
+    if (!startDateInput) return
+    const today = getTodayDate()
+    startDateInput.min = today.toISOString().slice(0, 10)
+}
+
+function setEndDateMin() {
+    if (!endDateInput) return
+    if (startDateInput?.value) {
+        endDateInput.min = startDateInput.value
+    } else {
+        endDateInput.min = getTodayDate().toISOString().slice(0, 10)
+    }
+}
+
+function validateStartDate() {
+    if (!startDateInput) return true
+    const value = startDateInput.value
+    if (!value) {
+        startDateWarning?.classList.add('hidden')
+        return true
+    }
+    const selected = new Date(value)
+    selected.setHours(0, 0, 0, 0)
+    const isValid = selected >= getTodayDate()
+    startDateWarning?.classList.toggle('hidden', isValid)
+    setEndDateMin()
+    if (endDateInput?.value) {
+        validateEndDate()
+    }
+    return isValid
+}
+
+function validateEndDate() {
+    if (!endDateInput) return true
+    const endValue = endDateInput.value
+    const startValue = startDateInput?.value
+    if (!endValue || !startValue) {
+        endDateWarning?.classList.add('hidden')
+        return true
+    }
+    const end = new Date(endValue)
+    const start = new Date(startValue)
+    end.setHours(0, 0, 0, 0)
+    start.setHours(0, 0, 0, 0)
+    const isValid = end >= start
+    endDateWarning?.classList.toggle('hidden', isValid)
+    return isValid
+}
+
+setStartDateMin()
+startDateInput?.addEventListener('input', validateStartDate)
+setEndDateMin()
+endDateInput?.addEventListener('input', validateEndDate)
+
 function validateForm(fd) {
     const s = fd.get('start_date'), e = fd.get('end_date')
     if (!s || !e) return 'Start and end dates are required.'
@@ -48,6 +121,12 @@ form.addEventListener('submit', async (e) => {
     e.preventDefault()
     formError?.classList.add('hidden')
     const fd = new FormData(form)
+    if (!validateStartDate()) {
+        return
+    }
+    if (!validateEndDate()) {
+        return
+    }
     const v = validateForm(fd)
     if (v) { formError.textContent = v; formError.classList.remove('hidden'); return }
 
@@ -60,8 +139,7 @@ form.addEventListener('submit', async (e) => {
     try {
         const res = await fetch('http://localhost:8000/api/v1/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
         if (!res.ok) {
-            const txt = await res.text()
-            throw new Error(txt || res.statusText)
+            throw new Error('Please check your inputs and try again.')
         }
         const data = await res.json()
         renderResult(data)
