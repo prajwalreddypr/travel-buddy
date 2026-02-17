@@ -20,6 +20,7 @@ const endDateWarning = document.getElementById('end-date-warning')
 const API_BASE = 'http://localhost:8000'
 let currentEstimate = null
 let tripId = null
+let selectedTransportOption = null
 
 function getURLParam(name) {
     const params = new URLSearchParams(window.location.search)
@@ -42,6 +43,25 @@ function showError(message) {
 function hideError() {
     formError.classList.add('hidden')
     formError.textContent = ''
+}
+
+function formatCurrency(v) {
+    return '$' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function updateTotalWithTransport(selectedOption) {
+    if (!currentEstimate) return
+
+    const accommodation = currentEstimate.breakdown.accommodation.total
+    const food = currentEstimate.breakdown.food
+    const misc = currentEstimate.breakdown.misc
+    const transport = selectedOption.price
+
+    const newTotal = transport + accommodation + food + misc
+    totalDiv.textContent = formatCurrency(newTotal)
+
+    // Update the total in currentEstimate so it saves correctly
+    currentEstimate.total = newTotal
 }
 
 function getTodayDate() {
@@ -103,25 +123,38 @@ function validateEndDate() {
 function formatBreakdown(breakdown) {
     let html = ''
 
-    // Transport (array of options)
+    // Transport (interactive options)
     if (breakdown.transport && Array.isArray(breakdown.transport) && breakdown.transport.length > 0) {
-        const totalTransport = breakdown.transport.reduce((sum, opt) => sum + (opt.price || 0), 0)
-        html += `<div class="card-small"><div class="option-title">Transport</div><div class="muted">$${totalTransport.toFixed(2)}</div></div>`
+        html += '<div class="transport-container">'
+        html += '<div class="option-title" style="margin-bottom:12px">Transport</div>'
+        html += '<div class="transport-options">'
+
+        breakdown.transport.forEach(opt => {
+            const isSelected = selectedTransportOption && selectedTransportOption.transport_type === opt.transport_type
+            const selectedClass = isSelected ? ' selected' : ''
+            html += `
+                <div class="transport-option-card${selectedClass}" data-transport-type="${opt.transport_type}">
+                    <div class="transport-option-header">
+                        <div><strong>${opt.provider}</strong></div>
+                        <div class="transport-price">${formatCurrency(opt.price)}</div>
+                    </div>
+                    <div class="muted" style="font-size:12px;margin-top:6px">${opt.transport_type}</div>
+                    <div class="muted" style="font-size:12px;margin-top:4px">${opt.notes || ''}</div>
+                </div>
+            `
+        })
+
+        html += '</div></div>'
     }
 
     // Accommodation (object with total)
     if (breakdown.accommodation && breakdown.accommodation.total !== undefined) {
-        html += `<div class="card-small"><div class="option-title">Accommodation</div><div class="muted">$${Number(breakdown.accommodation.total).toFixed(2)}</div></div>`
+        html += `<div class="card-small"><div class="option-title">Accommodation</div><div class="muted">${breakdown.accommodation.nights} nights × ${formatCurrency(breakdown.accommodation.per_night)}</div><div style="margin-top:8px;font-weight:700">${formatCurrency(breakdown.accommodation.total)}</div></div>`
     }
 
-    // Food (simple number)
-    if (breakdown.food !== undefined && breakdown.food !== null) {
-        html += `<div class="card-small"><div class="option-title">Food</div><div class="muted">$${Number(breakdown.food).toFixed(2)}</div></div>`
-    }
-
-    // Misc (simple number)
-    if (breakdown.misc !== undefined && breakdown.misc !== null) {
-        html += `<div class="card-small"><div class="option-title">Misc</div><div class="muted">$${Number(breakdown.misc).toFixed(2)}</div></div>`
+    // Food & Misc
+    if ((breakdown.food !== undefined && breakdown.food !== null) || (breakdown.misc !== undefined && breakdown.misc !== null)) {
+        html += `<div class="card-small"><div class="option-title">Daily Costs</div><div>Food: ${formatCurrency(breakdown.food)}</div><div>Misc: ${formatCurrency(breakdown.misc)}</div></div>`
     }
 
     return html
@@ -131,8 +164,43 @@ function displayEstimate(estimate) {
     currentEstimate = estimate
     summaryDiv.textContent = `${estimate.origin} → ${estimate.destination}`
     metaDiv.textContent = `${estimate.travelers} traveler(s) · ${estimate.start_date} to ${estimate.end_date}`
-    totalDiv.textContent = `$${Number(estimate.total).toFixed(2)}`
+    totalDiv.textContent = formatCurrency(estimate.total)
     breakdownDiv.innerHTML = formatBreakdown(estimate.breakdown)
+
+    // Set transport option - either match the saved transport_type or use the first one
+    if (estimate.breakdown.transport && estimate.breakdown.transport.length > 0) {
+        // Try to find matching transport option based on saved transport_type
+        if (estimate.transport_type && estimate.transport_type !== 'any') {
+            const matching = estimate.breakdown.transport.find(opt => opt.transport_type === estimate.transport_type)
+            if (matching) {
+                selectedTransportOption = matching
+            } else {
+                selectedTransportOption = estimate.breakdown.transport[0]
+            }
+        } else {
+            selectedTransportOption = estimate.breakdown.transport[0]
+        }
+    }
+
+    // Add click listeners to transport option cards
+    document.querySelectorAll('.transport-option-card').forEach(card => {
+        card.style.cursor = 'pointer'
+        card.addEventListener('click', function () {
+            const transportType = this.dataset.transportType
+            const transportOption = estimate.breakdown.transport.find(opt => opt.transport_type === transportType)
+
+            if (transportOption) {
+                // Update selected state
+                document.querySelectorAll('.transport-option-card').forEach(c => c.classList.remove('selected'))
+                this.classList.add('selected')
+
+                // Update selected option and total
+                selectedTransportOption = transportOption
+                updateTotalWithTransport(transportOption)
+            }
+        })
+    })
+
     resultPanel.classList.remove('hidden')
 }
 
@@ -227,14 +295,21 @@ async function saveChanges() {
 
     try {
         showLoader()
+
+        // Create a breakdown with the correct total
+        const breakdownToSave = {
+            ...currentEstimate.breakdown,
+            total: currentEstimate.total
+        }
+
         const updatePayload = {
             origin: currentEstimate.origin,
             destination: currentEstimate.destination,
             start_date: currentEstimate.start_date,
             end_date: currentEstimate.end_date,
             travelers: currentEstimate.travelers,
-            transport_type: 'any',
-            breakdown: currentEstimate.breakdown
+            transport_type: selectedTransportOption?.transport_type || 'any',
+            breakdown: breakdownToSave
         }
 
         const res = await fetch(`${API_BASE}/api/v1/trips/${tripId}`, {
