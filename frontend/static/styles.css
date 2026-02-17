@@ -1,8 +1,8 @@
 :root {
     --bg: #f7fbfd;
     --card: #ffffff;
-    --accent: #176fb3;
-    --accent-2: #0b7285;
+    --accent: #004687;
+    --accent-2: #51CF66;
     --muted: #6b7280;
     --glass: rgba(255, 255, 255, 0.72)
 }
@@ -75,7 +75,8 @@ body {
     box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
     margin-bottom: 16px;
     width: 100%;
-    max-width: 600px
+    max-width: 600px;
+    border-left: 4px solid var(--accent-2);
 }
 
 .form-panel {
@@ -160,7 +161,7 @@ input {
 
 input:focus {
     outline: none;
-    box-shadow: 0 6px 14px rgba(11, 114, 133, 0.06);
+    box-shadow: 0 6px 14px rgba(81, 207, 102, 0.15);
     border-color: var(--accent-2)
 }
 
@@ -194,12 +195,15 @@ input:focus {
 }
 
 .btn.primary:hover {
-    filter: brightness(.98)
+    box-shadow: 0 8px 18px rgba(0, 70, 135, 0.14);
+    filter: brightness(0.95);
+    border-bottom: 2px solid var(--accent-2);
 }
 
 .btn.ghost {
     background: transparent;
-    border: 1px solid #e6ecf3
+    border: 2px solid var(--accent-2);
+    color: var(--accent);
 }
 
 .muted {
@@ -232,7 +236,7 @@ input:focus {
 .big-total {
     font-size: 20px;
     font-weight: 700;
-    color: var(--accent)
+    color: var(--accent-2);
 }
 
 .breakdown {
@@ -287,10 +291,10 @@ input:focus {
     right: 18px;
     bottom: 18px;
     padding: 10px 14px;
-    background: #0b7285;
+    background: #004687;
     color: #fff;
     border-radius: 999px;
-    box-shadow: 0 8px 26px rgba(11, 114, 133, 0.18);
+    box-shadow: 0 8px 26px rgba(0, 70, 135, 0.18);
     transform: translateY(10px);
     transition: transform .18s ease, opacity .18s ease
 }
