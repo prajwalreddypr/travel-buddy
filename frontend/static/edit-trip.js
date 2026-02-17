@@ -101,21 +101,30 @@ function validateEndDate() {
 }
 
 function formatBreakdown(breakdown) {
-    const categories = [
-        { key: 'transport', label: 'Transport' },
-        { key: 'accommodation', label: 'Accommodation' },
-        { key: 'food', label: 'Food' },
-        { key: 'misc', label: 'Misc' }
-    ]
+    let html = ''
 
-    return categories
-        .filter(cat => breakdown[cat.key] !== undefined && breakdown[cat.key] !== null)
-        .map(cat => {
-            const value = breakdown[cat.key]
-            const amount = typeof value === 'object' && value.total ? value.total : value
-            return `<div class="card-small"><div class="option-title">${cat.label}</div><div class="muted">$${Number(amount).toFixed(2)}</div></div>`
-        })
-        .join('')
+    // Transport (array of options)
+    if (breakdown.transport && Array.isArray(breakdown.transport) && breakdown.transport.length > 0) {
+        const totalTransport = breakdown.transport.reduce((sum, opt) => sum + (opt.price || 0), 0)
+        html += `<div class="card-small"><div class="option-title">Transport</div><div class="muted">$${totalTransport.toFixed(2)}</div></div>`
+    }
+
+    // Accommodation (object with total)
+    if (breakdown.accommodation && breakdown.accommodation.total !== undefined) {
+        html += `<div class="card-small"><div class="option-title">Accommodation</div><div class="muted">$${Number(breakdown.accommodation.total).toFixed(2)}</div></div>`
+    }
+
+    // Food (simple number)
+    if (breakdown.food !== undefined && breakdown.food !== null) {
+        html += `<div class="card-small"><div class="option-title">Food</div><div class="muted">$${Number(breakdown.food).toFixed(2)}</div></div>`
+    }
+
+    // Misc (simple number)
+    if (breakdown.misc !== undefined && breakdown.misc !== null) {
+        html += `<div class="card-small"><div class="option-title">Misc</div><div class="muted">$${Number(breakdown.misc).toFixed(2)}</div></div>`
+    }
+
+    return html
 }
 
 function displayEstimate(estimate) {
