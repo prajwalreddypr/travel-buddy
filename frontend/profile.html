@@ -14,7 +14,7 @@
         <header class="top">
             <div class="top-left">
                 <div class="brand">✈️ Travel <span class="accent">Buddy</span></div>
-                <div class="subtitle">Your profile and saved trips</div>
+                <div class="subtitle">Your dashboard</div>
             </div>
             <div class="top-right">
                 <a class="btn ghost" href="/">Back to home</a>
@@ -23,26 +23,46 @@
         </header>
 
         <main class="container">
-            <section class="panel">
-                <div class="auth-header">
-                    <div>
-                        <h3>Profile</h3>
-                        <div class="muted">Manage your saved trips and account</div>
+            <div class="dashboard-wrapper">
+                <!-- Top Account Section -->
+                <section class="panel account-panel">
+                    <div class="account-section">
+                        <div class="account-content">
+                            <div class="option-title">Account</div>
+                            <div id="profile-email" class="muted">Email: —</div>
+                            <div class="muted" style="margin-top:8px">Phone: Coming soon</div>
+                            <div class="muted" style="margin-top:8px">More profile features coming soon</div>
+                        </div>
+                        <div id="auth-status" class="auth-status muted" style="text-align:right;font-size:12px;">
+                            Loading…</div>
                     </div>
-                    <div id="auth-status" class="auth-status muted">Loading…</div>
+                </section>
+
+                <!-- Main Content Grid -->
+                <div class="dashboard-grid">
+                    <!-- Left: Saved Trips -->
+                    <section class="panel trips-panel">
+                        <div class="trips-header">
+                            <div>
+                                <h3>Saved Trips</h3>
+                                <div class="muted">Manage your trip plans</div>
+                            </div>
+                        </div>
+                        <div id="trips-list" class="trips-list-vertical"></div>
+                    </section>
+
+                    <!-- Right: Actions & Future Content -->
+                    <section class="panel actions-panel">
+                        <div class="actions-content">
+                            <button class="btn primary plan-trip-btn" id="plan-trip-btn"
+                                style="width:100%;margin-bottom:20px;">
+                                ✓ Plan New Trip
+                            </button>
+                            <div class="muted">Future features coming soon...</div>
+                        </div>
+                    </section>
                 </div>
-                <div class="profile-grid">
-                    <div class="profile-card">
-                        <div class="option-title">Account</div>
-                        <div id="profile-email" class="muted">Email: —</div>
-                        <div class="muted" style="margin-top:8px">More profile features coming soon.</div>
-                    </div>
-                    <div>
-                        <div class="option-title" style="margin-bottom:8px">Saved Trips</div>
-                        <div id="trips-list" class="trips-list"></div>
-                    </div>
-                </div>
-            </section>
+            </div>
         </main>
     </div>
 

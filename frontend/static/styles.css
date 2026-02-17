@@ -369,6 +369,127 @@ input:focus {
     }
 }
 
+/* Dashboard Layout */
+.dashboard-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px
+}
+
+.account-panel {
+    background: linear-gradient(135deg, var(--accent) 0%, #003560 100%);
+    border: none;
+    color: #fff
+}
+
+.account-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px
+}
+
+.account-content .option-title {
+    color: #fff;
+    margin-bottom: 12px
+}
+
+.account-content .muted {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px
+}
+
+.auth-status {
+    color: rgba(255, 255, 255, 0.7) !important;
+    white-space: nowrap;
+    min-width: 180px
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 20px
+}
+
+.trips-panel {
+    min-height: 400px
+}
+
+.trips-header {
+    margin-bottom: 16px
+}
+
+.trips-header h3 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    color: var(--text)
+}
+
+.trips-list-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 12px
+}
+
+.trip-card-vertical {
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid #eef3f8;
+    background: #fbfdff;
+    border-left: 4px solid var(--accent-2);
+    display: flex;
+    flex-direction: column;
+    gap: 6px
+}
+
+.trip-card-vertical:hover {
+    background: #f0f7ff;
+    border-left-color: var(--accent)
+}
+
+.trip-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px
+}
+
+.trip-card-header .option-title {
+    margin: 0;
+    flex: 1
+}
+
+.trip-total {
+    font-weight: 700;
+    color: var(--accent-2);
+    white-space: nowrap;
+    font-size: 14px
+}
+
+.actions-panel {
+    min-height: 400px
+}
+
+.actions-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 0
+}
+
+.plan-trip-btn {
+    padding: 14px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.2s ease
+}
+
+.plan-trip-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 70, 135, 0.2)
+}
+
 @media (max-width:600px) {
     .fields {
         grid-template-columns: 1fr
@@ -397,5 +518,9 @@ input:focus {
 
     .subtitle {
         font-size: 12px
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr !important
     }
 }
