@@ -13,6 +13,7 @@ const formError = document.getElementById('form-error')
 const API_BASE = 'http://localhost:8000'
 let lastQuotePayload = null
 let lastQuoteResponse = null
+let selectedTransportOption = null
 
 function formatCurrency(v) { return '$' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
 
@@ -22,7 +23,7 @@ function showLoader(show = true) {
     loader.setAttribute('aria-hidden', String(!show))
 }
 
-function clearResult() { breakdown.innerHTML = ''; summary.textContent = 'Quote'; resultPanel.classList.add('hidden'); document.getElementById('total').textContent = '—'; formError?.classList.add('hidden'); formError.textContent = '' }
+function clearResult() { breakdown.innerHTML = ''; summary.textContent = 'Quote'; resultPanel.classList.add('hidden'); document.getElementById('total').textContent = '—'; formError?.classList.add('hidden'); formError.textContent = ''; selectedTransportOption = null }
 
 resetBtn?.addEventListener('click', () => {
     form.reset()
@@ -176,17 +177,58 @@ form.addEventListener('submit', async (e) => {
 
 function fadeIn(el) { el.style.opacity = 0; el.style.transform = 'translateY(6px)'; requestAnimationFrame(() => { el.style.transition = 'opacity .28s ease,transform .28s ease'; el.style.opacity = 1; el.style.transform = 'translateY(0)' }) }
 
+function updateTotalWithTransport(selectedOption) {
+    if (!lastQuoteResponse) return
+
+    const accommodation = lastQuoteResponse.breakdown.accommodation.total
+    const food = lastQuoteResponse.breakdown.food
+    const misc = lastQuoteResponse.breakdown.misc
+    const transport = selectedOption.price
+
+    const newTotal = transport + accommodation + food + misc
+    document.getElementById('total').textContent = formatCurrency(newTotal)
+}
+
 function renderResult(data) {
     summary.textContent = `${data.trip_days} day(s)`
     breakdown.innerHTML = ''
 
-    // Transport
-    const t = document.createElement('div'); t.className = 'card-small'; t.innerHTML = `<div class='option-title'>Transport</div>`
+    // Set first transport option as default if not already selected
+    if (!selectedTransportOption && data.breakdown.transport.length > 0) {
+        selectedTransportOption = data.breakdown.transport[0]
+    }
+
+    // Transport (clickable options)
+    const t = document.createElement('div'); t.className = 'transport-container'
+    const transportTitle = document.createElement('div'); transportTitle.className = 'option-title'; transportTitle.textContent = 'Transport'; transportTitle.style.marginBottom = '12px'
+    t.appendChild(transportTitle)
+
+    const transportOptions = document.createElement('div'); transportOptions.className = 'transport-options'
     data.breakdown.transport.forEach(opt => {
-        const d = document.createElement('div'); d.style.marginBottom = '12px'
-        d.innerHTML = `<div><strong>${opt.provider}</strong> — ${opt.transport_type}</div><div class='muted' style='margin-top:6px'>${opt.notes || ''}</div><div style='margin-top:8px;font-weight:700'>${formatCurrency(opt.price)}</div>`
-        t.appendChild(d)
+        const optionCard = document.createElement('div')
+        optionCard.className = 'transport-option-card'
+        if (selectedTransportOption && selectedTransportOption.transport_type === opt.transport_type) {
+            optionCard.classList.add('selected')
+        }
+        optionCard.innerHTML = `
+            <div class="transport-option-header">
+                <div><strong>${opt.provider}</strong></div>
+                <div class="transport-price">${formatCurrency(opt.price)}</div>
+            </div>
+            <div class="muted" style="font-size:12px;margin-top:6px">${opt.transport_type}</div>
+            <div class="muted" style="font-size:12px;margin-top:4px">${opt.notes || ''}</div>
+        `
+        optionCard.style.cursor = 'pointer'
+        optionCard.addEventListener('click', () => {
+            // Update selected option
+            document.querySelectorAll('.transport-option-card').forEach(card => card.classList.remove('selected'))
+            optionCard.classList.add('selected')
+            selectedTransportOption = opt
+            updateTotalWithTransport(opt)
+        })
+        transportOptions.appendChild(optionCard)
     })
+    t.appendChild(transportOptions)
     breakdown.appendChild(t); fadeIn(t)
 
     // Accommodation
@@ -219,7 +261,7 @@ saveTripBtn?.addEventListener('click', async () => {
             credentials: 'include',
             body: JSON.stringify({
                 ...lastQuotePayload,
-                transport_type: 'any',
+                transport_type: selectedTransportOption?.transport_type || 'any',
                 breakdown: lastQuoteResponse.breakdown
             })
         })
