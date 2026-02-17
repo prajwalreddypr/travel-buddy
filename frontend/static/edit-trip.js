@@ -124,8 +124,20 @@ async function getEstimate(formData) {
             return
         }
 
-        const estimate = await res.json()
+        const quote = await res.json()
         hideError()
+        
+        // Merge form data with quote response to create complete estimate object
+        const estimate = {
+            origin: payload.origin,
+            destination: payload.destination,
+            start_date: payload.start_date,
+            end_date: payload.end_date,
+            travelers: payload.travelers,
+            breakdown: quote.breakdown,
+            total: quote.breakdown.total
+        }
+        
         displayEstimate(estimate)
     } catch (err) {
         showError('Error: ' + err.message)
