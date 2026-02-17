@@ -59,6 +59,9 @@ function updateTotalWithTransport(selectedOption) {
 
     const newTotal = transport + accommodation + food + misc
     totalDiv.textContent = formatCurrency(newTotal)
+
+    // Update the total in currentEstimate so it saves correctly
+    currentEstimate.total = newTotal
 }
 
 function getTodayDate() {
@@ -292,6 +295,13 @@ async function saveChanges() {
 
     try {
         showLoader()
+
+        // Create a breakdown with the correct total
+        const breakdownToSave = {
+            ...currentEstimate.breakdown,
+            total: currentEstimate.total
+        }
+
         const updatePayload = {
             origin: currentEstimate.origin,
             destination: currentEstimate.destination,
@@ -299,7 +309,7 @@ async function saveChanges() {
             end_date: currentEstimate.end_date,
             travelers: currentEstimate.travelers,
             transport_type: selectedTransportOption?.transport_type || 'any',
-            breakdown: currentEstimate.breakdown
+            breakdown: breakdownToSave
         }
 
         const res = await fetch(`${API_BASE}/api/v1/trips/${tripId}`, {

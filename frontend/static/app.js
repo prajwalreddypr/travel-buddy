@@ -14,6 +14,7 @@ const API_BASE = 'http://localhost:8000'
 let lastQuotePayload = null
 let lastQuoteResponse = null
 let selectedTransportOption = null
+let calculatedTotal = null
 
 function formatCurrency(v) { return '$' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
 
@@ -23,7 +24,7 @@ function showLoader(show = true) {
     loader.setAttribute('aria-hidden', String(!show))
 }
 
-function clearResult() { breakdown.innerHTML = ''; summary.textContent = 'Quote'; resultPanel.classList.add('hidden'); document.getElementById('total').textContent = '—'; formError?.classList.add('hidden'); formError.textContent = ''; selectedTransportOption = null }
+function clearResult() { breakdown.innerHTML = ''; summary.textContent = 'Quote'; resultPanel.classList.add('hidden'); document.getElementById('total').textContent = '—'; formError?.classList.add('hidden'); formError.textContent = ''; selectedTransportOption = null; calculatedTotal = null }
 
 resetBtn?.addEventListener('click', () => {
     form.reset()
@@ -186,6 +187,7 @@ function updateTotalWithTransport(selectedOption) {
     const transport = selectedOption.price
 
     const newTotal = transport + accommodation + food + misc
+    calculatedTotal = newTotal
     document.getElementById('total').textContent = formatCurrency(newTotal)
 }
 
@@ -196,6 +198,17 @@ function renderResult(data) {
     // Set first transport option as default if not already selected
     if (!selectedTransportOption && data.breakdown.transport.length > 0) {
         selectedTransportOption = data.breakdown.transport[0]
+    }
+
+    // Calculate the correct initial total based on selected transport
+    if (selectedTransportOption && data.breakdown.transport.length > 0) {
+        const transport = selectedTransportOption.price
+        const accommodation = data.breakdown.accommodation.total
+        const food = data.breakdown.food
+        const misc = data.breakdown.misc
+        calculatedTotal = transport + accommodation + food + misc
+    } else {
+        calculatedTotal = data.breakdown.total
     }
 
     // Transport (clickable options)
@@ -255,6 +268,12 @@ saveTripBtn?.addEventListener('click', async () => {
             return
         }
 
+        // Create a breakdown with the correct calculated total
+        const breakdownToSave = {
+            ...lastQuoteResponse.breakdown,
+            total: calculatedTotal || lastQuoteResponse.breakdown.total
+        }
+
         const saveRes = await fetch(`${API_BASE}/api/v1/trips`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -262,7 +281,7 @@ saveTripBtn?.addEventListener('click', async () => {
             body: JSON.stringify({
                 ...lastQuotePayload,
                 transport_type: selectedTransportOption?.transport_type || 'any',
-                breakdown: lastQuoteResponse.breakdown
+                breakdown: breakdownToSave
             })
         })
 
