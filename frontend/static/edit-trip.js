@@ -11,6 +11,12 @@ const saveStatus = document.getElementById('save-status')
 const formError = document.getElementById('form-error')
 const loader = document.getElementById('loader')
 
+// Date validation elements
+const startDateInput = document.querySelector('input[name="start_date"]')
+const startDateWarning = document.getElementById('start-date-warning')
+const endDateInput = document.querySelector('input[name="end_date"]')
+const endDateWarning = document.getElementById('end-date-warning')
+
 const API_BASE = 'http://localhost:8000'
 let currentEstimate = null
 let tripId = null
@@ -36,6 +42,62 @@ function showError(message) {
 function hideError() {
     formError.classList.add('hidden')
     formError.textContent = ''
+}
+
+function getTodayDate() {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return today
+}
+
+function setStartDateMin() {
+    if (!startDateInput) return
+    const today = getTodayDate()
+    startDateInput.min = today.toISOString().slice(0, 10)
+}
+
+function setEndDateMin() {
+    if (!endDateInput) return
+    if (startDateInput?.value) {
+        endDateInput.min = startDateInput.value
+    } else {
+        endDateInput.min = getTodayDate().toISOString().slice(0, 10)
+    }
+}
+
+function validateStartDate() {
+    if (!startDateInput) return true
+    const value = startDateInput.value
+    if (!value) {
+        startDateWarning?.classList.add('hidden')
+        return true
+    }
+    const selected = new Date(value)
+    selected.setHours(0, 0, 0, 0)
+    const isValid = selected >= getTodayDate()
+    startDateWarning?.classList.toggle('hidden', isValid)
+    setEndDateMin()
+    if (endDateInput?.value) {
+        validateEndDate()
+    }
+    return isValid
+}
+
+function validateEndDate() {
+    if (!endDateInput) return true
+    const endValue = endDateInput.value
+    const startValue = startDateInput?.value
+    if (!endValue || !startValue) {
+        endDateWarning?.classList.add('hidden')
+        return true
+    }
+    const end = new Date(endValue)
+    const start = new Date(startValue)
+    end.setHours(0, 0, 0, 0)
+    start.setHours(0, 0, 0, 0)
+    const isValid = end >= start
+    endDateWarning?.classList.toggle('hidden', isValid)
+    return isValid
 }
 
 function formatBreakdown(breakdown) {
@@ -104,9 +166,11 @@ async function loadTrip() {
 async function getEstimate(formData) {
     try {
         showLoader()
+        const origin = formData.get('origin')?.trim()
+        const destination = formData.get('destination')?.trim()
         const payload = {
-            origin: formData.get('origin'),
-            destination: formData.get('destination'),
+            origin: origin,
+            destination: destination,
             start_date: formData.get('start_date'),
             end_date: formData.get('end_date'),
             travelers: parseInt(formData.get('travelers'))
@@ -126,18 +190,18 @@ async function getEstimate(formData) {
 
         const quote = await res.json()
         hideError()
-        
+
         // Merge form data with quote response to create complete estimate object
         const estimate = {
-            origin: payload.origin,
-            destination: payload.destination,
+            origin: origin,
+            destination: destination,
             start_date: payload.start_date,
             end_date: payload.end_date,
             travelers: payload.travelers,
             breakdown: quote.breakdown,
             total: quote.breakdown.total
         }
-        
+
         displayEstimate(estimate)
     } catch (err) {
         showError('Error: ' + err.message)
@@ -192,6 +256,15 @@ async function saveChanges() {
 form.addEventListener('submit', async (e) => {
     e.preventDefault()
     hideError()
+
+    // Validate dates before submitting
+    if (!validateStartDate()) {
+        return
+    }
+    if (!validateEndDate()) {
+        return
+    }
+
     const formData = new FormData(form)
     await getEstimate(formData)
 })
@@ -201,5 +274,11 @@ newEstimateBtn.addEventListener('click', () => {
 })
 
 saveChangesBtn.addEventListener('click', saveChanges)
+
+// Initialize date validation
+setStartDateMin()
+startDateInput?.addEventListener('input', validateStartDate)
+setEndDateMin()
+endDateInput?.addEventListener('input', validateEndDate)
 
 loadTrip()
