@@ -9,12 +9,151 @@ const saveTripBtn = document.getElementById('save-trip')
 const saveStatus = document.getElementById('save-status')
 const loader = document.getElementById('loader')
 const formError = document.getElementById('form-error')
+const chatbotToggle = document.getElementById('chatbot-toggle')
+const chatbotPanel = document.getElementById('chatbot-panel')
+const chatbotClose = document.getElementById('chatbot-close')
+const chatbotForm = document.getElementById('chatbot-form')
+const chatbotMessages = document.getElementById('chatbot-messages')
+const chatbotInput = document.getElementById('chatbot-input')
+const chatbotInputLabel = document.getElementById('chatbot-input-label')
+const chatbotReset = document.getElementById('chatbot-reset')
+const chatbotSendBtn = chatbotForm?.querySelector('button[type="submit"]')
 
 const API_BASE = 'http://localhost:8000'
 let lastQuotePayload = null
 let lastQuoteResponse = null
 let selectedTransportOption = null
 let calculatedTotal = null
+const chatbotIntake = {
+    destination: '',
+    days: '',
+    step: 'destination'
+}
+
+function addChatbotMessage(text, role = 'bot') {
+    if (!chatbotMessages) return
+    const bubble = document.createElement('div')
+    bubble.className = `chatbot-bubble ${role}`
+    bubble.textContent = text
+    chatbotMessages.appendChild(bubble)
+    chatbotMessages.scrollTop = chatbotMessages.scrollHeight
+}
+
+function setChatbotInputForStep() {
+    if (!chatbotInput || !chatbotInputLabel || !chatbotSendBtn) return
+
+    if (chatbotIntake.step === 'destination') {
+        chatbotInputLabel.textContent = 'Where do you want to travel?'
+        chatbotInput.type = 'text'
+        chatbotInput.placeholder = 'e.g. Tokyo'
+        chatbotInput.min = ''
+        chatbotInput.value = chatbotIntake.destination || ''
+        chatbotInput.disabled = false
+        chatbotSendBtn.disabled = false
+        chatbotSendBtn.textContent = 'Send'
+        return
+    }
+
+    if (chatbotIntake.step === 'days') {
+        chatbotInputLabel.textContent = 'How many days is your trip?'
+        chatbotInput.type = 'number'
+        chatbotInput.placeholder = 'e.g. 5'
+        chatbotInput.min = '1'
+        chatbotInput.value = chatbotIntake.days || ''
+        chatbotInput.disabled = false
+        chatbotSendBtn.disabled = false
+        chatbotSendBtn.textContent = 'Send'
+        return
+    }
+
+    chatbotInputLabel.textContent = 'Inputs captured. Use Start over to edit.'
+    chatbotInput.value = ''
+    chatbotInput.placeholder = 'Captured'
+    chatbotInput.disabled = true
+    chatbotSendBtn.disabled = true
+    chatbotSendBtn.textContent = 'Saved'
+}
+
+function resetChatbotConversation() {
+    chatbotIntake.destination = ''
+    chatbotIntake.days = ''
+    chatbotIntake.step = 'destination'
+    window.chatbotIntake = { destination: '', days: '' }
+
+    if (chatbotMessages) chatbotMessages.innerHTML = ''
+    addChatbotMessage('Hi! I can collect a couple of trip details to get started.')
+    addChatbotMessage('Where do you want to travel?')
+    setChatbotInputForStep()
+    chatbotInput?.focus()
+}
+
+function openChatbot() {
+    if (!chatbotPanel || !chatbotToggle) return
+    chatbotPanel.classList.remove('hidden')
+    chatbotToggle.setAttribute('aria-expanded', 'true')
+    chatbotInput?.focus()
+}
+
+function closeChatbot() {
+    if (!chatbotPanel || !chatbotToggle) return
+    chatbotPanel.classList.add('hidden')
+    chatbotToggle.setAttribute('aria-expanded', 'false')
+}
+
+function initChatbot() {
+    if (!chatbotToggle || !chatbotPanel || !chatbotForm) return
+
+    resetChatbotConversation()
+
+    chatbotToggle.addEventListener('click', () => {
+        const isHidden = chatbotPanel.classList.contains('hidden')
+        if (isHidden) {
+            openChatbot()
+            return
+        }
+        closeChatbot()
+    })
+
+    chatbotClose?.addEventListener('click', closeChatbot)
+    chatbotReset?.addEventListener('click', resetChatbotConversation)
+
+    chatbotForm.addEventListener('submit', (event) => {
+        event.preventDefault()
+        const raw = chatbotInput?.value ?? ''
+        const value = String(raw).trim()
+        if (!value) return
+
+        if (chatbotIntake.step === 'destination') {
+            chatbotIntake.destination = value
+            addChatbotMessage(value, 'user')
+            chatbotIntake.step = 'days'
+            addChatbotMessage('Nice choice. How many days are you planning to travel?')
+            setChatbotInputForStep()
+            chatbotInput?.focus()
+            return
+        }
+
+        if (chatbotIntake.step === 'days') {
+            const days = Number(value)
+            if (!Number.isInteger(days) || days < 1) {
+                addChatbotMessage('Please enter a valid number of days (minimum 1).')
+                return
+            }
+
+            chatbotIntake.days = String(days)
+            addChatbotMessage(String(days), 'user')
+            chatbotIntake.step = 'done'
+            window.chatbotIntake = {
+                destination: chatbotIntake.destination,
+                days: chatbotIntake.days
+            }
+            addChatbotMessage('Perfect. I saved your destination and trip length for the next step.')
+            setChatbotInputForStep()
+        }
+    })
+}
+
+initChatbot()
 
 function formatCurrency(v) { return '$' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
 
