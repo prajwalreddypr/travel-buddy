@@ -456,20 +456,51 @@ input:focus {
     padding: 10px 12px;
     border-radius: 12px;
     font-size: 13px;
-    line-height: 1.4
+    line-height: 1.4;
+    word-break: break-word
 }
 
 .chatbot-bubble.bot {
     align-self: flex-start;
     background: #eaf3ff;
     color: #0f172a;
-    border: 1px solid #d9e9ff
+    border: 1px solid #d9e9ff;
+    white-space: normal
 }
 
 .chatbot-bubble.user {
     align-self: flex-end;
     background: var(--accent);
-    color: #fff
+    color: #fff;
+    white-space: pre-wrap
+}
+
+.chatbot-msg-heading {
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: #0b3c74
+}
+
+.chatbot-msg-paragraph {
+    margin: 0 0 8px;
+    color: #0f172a
+}
+
+.chatbot-msg-paragraph:last-child {
+    margin-bottom: 0
+}
+
+.chatbot-msg-list {
+    margin: 0 0 10px;
+    padding-left: 18px
+}
+
+.chatbot-msg-list li {
+    margin-bottom: 6px
+}
+
+.chatbot-msg-list li:last-child {
+    margin-bottom: 0
 }
 
 .chatbot-form {

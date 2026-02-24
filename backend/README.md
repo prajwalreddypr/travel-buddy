@@ -30,6 +30,10 @@ cp .env.prod .env
 - `LOG_LEVEL`: `info`, `debug`, `warning`
 - `MAX_TRAVELERS`: Maximum travelers per trip (default: 20)
 - `MAX_TRIP_DAYS`: Maximum trip duration in days (default: 365)
+- `LLM_PROVIDER`: `ollama` for local chatbot responses
+- `OLLAMA_BASE_URL`: Ollama API URL (default: `http://localhost:11434`)
+- `OLLAMA_MODEL`: Local model name (default: `llama3.1:8b`)
+- `LLM_TIMEOUT_SECONDS`: Request timeout for chat responses (default: 30)
 
 ### 3. Run the Application
 
@@ -42,6 +46,21 @@ python -m app.main
 ```
 
 The API will be available at `http://localhost:8000`
+
+### 4. Chatbot Model Setup (Ollama)
+
+Before using `/api/v1/chat`, ensure Ollama is running and the configured model is pulled:
+
+```bash
+ollama pull qwen2.5:3b
+ollama list
+```
+
+Optional readiness check:
+
+```bash
+curl http://localhost:8000/api/v1/chat/health
+```
 
 ## API Documentation
 
@@ -80,6 +99,45 @@ POST /api/v1/quote
   "end_date": "2026-03-25",
   "travelers": 2,
   "transport_type": "any"
+}
+```
+
+#### AI Chat
+```
+POST /api/v1/chat
+```
+
+#### AI Chat Health
+```
+GET /api/v1/chat/health
+```
+
+**Response:**
+```json
+{
+  "provider": "ollama",
+  "base_url": "http://localhost:11434",
+  "model": "qwen2.5:3b",
+  "provider_reachable": true,
+  "model_available": true
+}
+```
+
+**Request:**
+```json
+{
+  "message": "Is 5 days enough for Tokyo?",
+  "context": {
+    "destination": "Tokyo",
+    "days": "5"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "reply": "Five days is a solid first trip for Tokyo..."
 }
 ```
 
