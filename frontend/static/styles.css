@@ -468,6 +468,11 @@ input:focus {
     white-space: normal
 }
 
+.chatbot-bubble.thinking {
+    font-style: italic;
+    color: var(--muted)
+}
+
 .chatbot-bubble.user {
     align-self: flex-end;
     background: var(--accent);

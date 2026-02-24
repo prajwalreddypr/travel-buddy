@@ -167,6 +167,21 @@ function addChatbotMessage(text, role = 'bot') {
     chatbotMessages.scrollTop = chatbotMessages.scrollHeight
 }
 
+function showChatbotThinking() {
+    if (!chatbotMessages) return null
+    const bubble = document.createElement('div')
+    bubble.className = 'chatbot-bubble bot thinking'
+    bubble.textContent = 'Thinking…'
+    chatbotMessages.appendChild(bubble)
+    chatbotMessages.scrollTop = chatbotMessages.scrollHeight
+    return bubble
+}
+
+function removeChatbotThinking(bubble) {
+    if (!bubble || !bubble.parentNode) return
+    bubble.parentNode.removeChild(bubble)
+}
+
 function setChatbotInputForStep() {
     if (!chatbotInput || !chatbotInputLabel || !chatbotSendBtn) return
 
@@ -545,13 +560,17 @@ function initChatbot() {
         chatbotInput.value = ''
         chatbotInput.disabled = true
         if (chatbotSendBtn) chatbotSendBtn.disabled = true
+        const thinkingBubble = showChatbotThinking()
 
         try {
             const data = await requestChatbotReply(value)
+            removeChatbotThinking(thinkingBubble)
             addChatbotMessage(data.reply || 'I could not generate a response.')
         } catch (err) {
+            removeChatbotThinking(thinkingBubble)
             addChatbotMessage(err.message || 'Something went wrong while getting a response.')
         } finally {
+            removeChatbotThinking(thinkingBubble)
             chatbotInput.disabled = false
             if (chatbotSendBtn) chatbotSendBtn.disabled = false
             chatbotInput.focus()

@@ -18,6 +18,7 @@ const chatbotMessages = document.getElementById('chatbot-messages')
 const chatbotInput = document.getElementById('chatbot-input')
 const chatbotInputLabel = document.getElementById('chatbot-input-label')
 const chatbotReset = document.getElementById('chatbot-reset')
+const chatbotSendBtn = chatbotForm?.querySelector('button[type="submit"]')
 
 // Date validation elements
 const startDateInput = document.querySelector('input[name="start_date"]')
@@ -180,6 +181,21 @@ function addChatbotMessage(text, role = 'bot') {
     chatbotMessages.scrollTop = chatbotMessages.scrollHeight
 }
 
+function showChatbotThinking() {
+    if (!chatbotMessages) return null
+    const bubble = document.createElement('div')
+    bubble.className = 'chatbot-bubble bot thinking'
+    bubble.textContent = 'Thinking…'
+    chatbotMessages.appendChild(bubble)
+    chatbotMessages.scrollTop = chatbotMessages.scrollHeight
+    return bubble
+}
+
+function removeChatbotThinking(bubble) {
+    if (!bubble || !bubble.parentNode) return
+    bubble.parentNode.removeChild(bubble)
+}
+
 function openChatbot() {
     if (!chatbotPanel || !chatbotToggle) return
     chatbotPanel.classList.remove('hidden')
@@ -267,12 +283,24 @@ function initChatbot() {
 
         addChatbotMessage(value, 'user')
         if (chatbotInput) chatbotInput.value = ''
+        if (chatbotInput) chatbotInput.disabled = true
+        if (chatbotSendBtn) chatbotSendBtn.disabled = true
+        const thinkingBubble = showChatbotThinking()
 
         try {
             const data = await requestChatbotReply(value)
+            removeChatbotThinking(thinkingBubble)
             addChatbotMessage(data.reply || 'I could not generate a response.')
         } catch (err) {
+            removeChatbotThinking(thinkingBubble)
             addChatbotMessage(err.message || 'Something went wrong while getting a response.')
+        } finally {
+            removeChatbotThinking(thinkingBubble)
+            if (chatbotInput) {
+                chatbotInput.disabled = false
+                chatbotInput.focus()
+            }
+            if (chatbotSendBtn) chatbotSendBtn.disabled = false
         }
     })
 }
