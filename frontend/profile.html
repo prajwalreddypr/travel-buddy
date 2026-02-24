@@ -65,6 +65,38 @@
                 </div>
             </div>
         </main>
+
+        <div class="chatbot-widget" id="chatbot-widget">
+            <button class="chatbot-toggle" id="chatbot-toggle" type="button" aria-expanded="false"
+                aria-controls="chatbot-panel">
+                <span class="chatbot-toggle-icon">🤖</span>
+                <span>AI Trip Assistant</span>
+            </button>
+
+            <section class="chatbot-panel hidden" id="chatbot-panel" role="dialog" aria-label="AI Trip Assistant">
+                <div class="chatbot-header">
+                    <div class="chatbot-title-wrap">
+                        <div class="chatbot-title">AI Trip Assistant</div>
+                        <div class="chatbot-subtitle">Ask about your saved trips</div>
+                    </div>
+                    <button class="chatbot-close" id="chatbot-close" type="button" aria-label="Close chatbot">✕</button>
+                </div>
+
+                <div class="chatbot-messages" id="chatbot-messages" aria-live="polite"></div>
+
+                <form class="chatbot-form" id="chatbot-form" novalidate>
+                    <label class="chatbot-label" for="chatbot-input" id="chatbot-input-label">Ask anything about your
+                        trip</label>
+                    <div class="chatbot-input-row">
+                        <input id="chatbot-input" class="chatbot-input" type="text"
+                            placeholder="e.g. 5-day Tokyo itinerary" autocomplete="off" required />
+                        <button class="btn primary chatbot-send" type="submit">Send</button>
+                    </div>
+                </form>
+
+                <button class="chatbot-reset" id="chatbot-reset" type="button">Start over</button>
+            </section>
+        </div>
     </div>
 
     <script src="/static/profile.js"></script>

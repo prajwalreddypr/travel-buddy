@@ -19,6 +19,11 @@ const chatbotInputLabel = document.getElementById('chatbot-input-label')
 const chatbotReset = document.getElementById('chatbot-reset')
 const chatbotSendBtn = chatbotForm?.querySelector('button[type="submit"]')
 
+if (window.location.port === '8000' && window.location.hostname === 'localhost') {
+    const target = `http://127.0.0.1:8000${window.location.pathname}${window.location.search}${window.location.hash}`
+    window.location.replace(target)
+}
+
 const API_BASE = (() => {
     const explicit = window.TRAVEL_BUDDY_API_BASE
     if (typeof explicit === 'string' && explicit.trim()) {
@@ -30,7 +35,22 @@ const API_BASE = (() => {
         return origin
     }
 
+    if (window.location.hostname) {
+        return `${window.location.protocol}//${window.location.hostname}:8000`
+    }
+
     return 'http://127.0.0.1:8000'
+})()
+
+const ALTERNATE_API_BASE = (() => {
+    const host = window.location.hostname
+    if (host === 'localhost') {
+        return `${window.location.protocol}//127.0.0.1:8000`
+    }
+    if (host === '127.0.0.1') {
+        return `${window.location.protocol}//localhost:8000`
+    }
+    return ''
 })()
 let lastQuotePayload = null
 let lastQuoteResponse = null
@@ -315,9 +335,62 @@ function calculateTripDays(startDate, endDate) {
     return String(Math.max(rawDays, 1))
 }
 
+function buildContextFromTrip(trip) {
+    return {
+        destination: String(trip.destination || ''),
+        days: calculateTripDays(trip.start_date, trip.end_date),
+        budget: String(trip.total ?? ''),
+        transport_type: String(trip.transport_type || ''),
+        origin: String(trip.origin || ''),
+        travelers: String(trip.travelers ?? ''),
+    }
+}
+
+function getChatTripIdFromQuery() {
+    const params = new URLSearchParams(window.location.search)
+    const value = params.get('chat_trip_id')
+    if (!value) return null
+    const parsed = Number(value)
+    if (!Number.isInteger(parsed) || parsed < 1) return null
+    return parsed
+}
+
+async function fetchTripByIdForChat(baseUrl, tripId) {
+    const response = await fetch(`${baseUrl}/api/v1/trips/${tripId}`, { credentials: 'include' })
+    if (!response.ok) {
+        throw new Error(`trip_fetch_failed_${response.status}`)
+    }
+    return response.json()
+}
+
+async function hydrateFromTripQueryParam() {
+    const tripId = getChatTripIdFromQuery()
+    if (!tripId) return false
+
+    try {
+        const trip = await fetchTripByIdForChat(API_BASE, tripId)
+        return applyChatbotTripContext(
+            buildContextFromTrip(trip),
+            `Loaded saved trip (${trip.origin} → ${trip.destination}). Ask anything about this plan.`
+        )
+    } catch (err) {
+        if (ALTERNATE_API_BASE && String(err.message || '').includes('trip_fetch_failed_401')) {
+            const pathAndQuery = `${window.location.pathname}${window.location.search}`
+            window.location.href = `${ALTERNATE_API_BASE}${pathAndQuery}`
+            return true
+        }
+        return false
+    }
+}
+
 async function hydrateChatbotContextFromSavedTrips() {
     if (chatbotContextHydrated) return
     chatbotContextHydrated = true
+
+    const hydratedFromQuery = await hydrateFromTripQueryParam()
+    if (hydratedFromQuery) {
+        return
+    }
 
     const prefill = extractPrefillContextFromStorage()
     if (prefill && applyChatbotTripContext(prefill.context || prefill, prefill.introText)) {

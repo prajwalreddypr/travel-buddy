@@ -4,7 +4,20 @@ const authError = document.getElementById('auth-error')
 const loginBtn = document.getElementById('login-btn')
 const registerBtn = document.getElementById('register-btn')
 
-const API_BASE = 'http://localhost:8000'
+if (window.location.port === '8000' && window.location.hostname === 'localhost') {
+    const target = `http://127.0.0.1:8000${window.location.pathname}${window.location.search}${window.location.hash}`
+    window.location.replace(target)
+}
+
+const API_BASE = (() => {
+    if (window.location.origin && /^https?:\/\//i.test(window.location.origin) && /:8000$/i.test(window.location.origin)) {
+        return window.location.origin
+    }
+    if (window.location.hostname) {
+        return `${window.location.protocol}//${window.location.hostname}:8000`
+    }
+    return 'http://127.0.0.1:8000'
+})()
 
 function setAuthState(user) {
     if (user) {
