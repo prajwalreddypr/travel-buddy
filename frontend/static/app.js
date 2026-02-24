@@ -39,8 +39,14 @@ let calculatedTotal = null
 const chatbotIntake = {
     destination: '',
     days: '',
+    budget: '',
+    transport_type: '',
+    origin: '',
+    travelers: '',
     step: 'destination'
 }
+const CHAT_PREFILL_STORAGE_KEY = 'travelBuddyChatPrefill'
+let chatbotContextHydrated = false
 
 function formatBotReply(text) {
     let output = String(text || '').trim()
@@ -205,7 +211,11 @@ async function requestChatbotReply(message) {
         message,
         context: {
             destination: chatbotIntake.destination || '',
-            days: chatbotIntake.days || ''
+            days: chatbotIntake.days || '',
+            budget: chatbotIntake.budget || '',
+            transport_type: chatbotIntake.transport_type || '',
+            origin: chatbotIntake.origin || '',
+            travelers: chatbotIntake.travelers || ''
         }
     }
 
@@ -246,11 +256,121 @@ async function requestChatbotReply(message) {
     return response.json()
 }
 
+function applyChatbotTripContext(context, introText) {
+    if (!context || typeof context !== 'object') return false
+
+    const destination = String(context.destination || '').trim()
+    const days = String(context.days || '').trim()
+    if (!destination || !days) return false
+
+    chatbotIntake.destination = destination
+    chatbotIntake.days = days
+    chatbotIntake.budget = String(context.budget || '').trim()
+    chatbotIntake.transport_type = String(context.transport_type || '').trim()
+    chatbotIntake.origin = String(context.origin || '').trim()
+    chatbotIntake.travelers = String(context.travelers || '').trim()
+    chatbotIntake.step = 'done'
+
+    window.chatbotIntake = {
+        destination: chatbotIntake.destination,
+        days: chatbotIntake.days,
+        budget: chatbotIntake.budget,
+        transport_type: chatbotIntake.transport_type,
+        origin: chatbotIntake.origin,
+        travelers: chatbotIntake.travelers
+    }
+
+    if (chatbotMessages) {
+        chatbotMessages.innerHTML = ''
+        addChatbotMessage(
+            introText || `Loaded your saved trip to ${destination} for ${days} day(s). Ask anything about this trip.`
+        )
+    }
+
+    setChatbotInputForStep()
+    return true
+}
+
+function extractPrefillContextFromStorage() {
+    const raw = window.localStorage.getItem(CHAT_PREFILL_STORAGE_KEY)
+    if (!raw) return null
+
+    try {
+        const parsed = JSON.parse(raw)
+        window.localStorage.removeItem(CHAT_PREFILL_STORAGE_KEY)
+        return parsed
+    } catch {
+        window.localStorage.removeItem(CHAT_PREFILL_STORAGE_KEY)
+        return null
+    }
+}
+
+function calculateTripDays(startDate, endDate) {
+    if (!startDate || !endDate) return ''
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return ''
+    const millisecondsInDay = 24 * 60 * 60 * 1000
+    const rawDays = Math.floor((end - start) / millisecondsInDay) + 1
+    return String(Math.max(rawDays, 1))
+}
+
+async function hydrateChatbotContextFromSavedTrips() {
+    if (chatbotContextHydrated) return
+    chatbotContextHydrated = true
+
+    const prefill = extractPrefillContextFromStorage()
+    if (prefill && applyChatbotTripContext(prefill.context || prefill, prefill.introText)) {
+        return
+    }
+
+    if (chatbotIntake.destination && chatbotIntake.days) {
+        return
+    }
+
+    try {
+        const meRes = await fetch(`${API_BASE}/api/v1/auth/me`, { credentials: 'include' })
+        if (!meRes.ok) return
+
+        const tripsRes = await fetch(`${API_BASE}/api/v1/trips`, { credentials: 'include' })
+        if (!tripsRes.ok) return
+
+        const trips = await tripsRes.json()
+        if (!Array.isArray(trips) || !trips.length) return
+
+        const latest = trips[0]
+        applyChatbotTripContext(
+            {
+                destination: latest.destination,
+                days: calculateTripDays(latest.start_date, latest.end_date),
+                budget: String(latest.total ?? ''),
+                transport_type: String(latest.transport_type || ''),
+                origin: String(latest.origin || ''),
+                travelers: String(latest.travelers ?? ''),
+            },
+            `Loaded your latest saved trip (${latest.origin} → ${latest.destination}). Ask anything about this plan.`
+        )
+    } catch {
+        // Ignore hydration failures and keep manual intake flow.
+    }
+}
+
 function resetChatbotConversation() {
     chatbotIntake.destination = ''
     chatbotIntake.days = ''
+    chatbotIntake.budget = ''
+    chatbotIntake.transport_type = ''
+    chatbotIntake.origin = ''
+    chatbotIntake.travelers = ''
     chatbotIntake.step = 'destination'
-    window.chatbotIntake = { destination: '', days: '' }
+    window.chatbotIntake = {
+        destination: '',
+        days: '',
+        budget: '',
+        transport_type: '',
+        origin: '',
+        travelers: ''
+    }
 
     if (chatbotMessages) chatbotMessages.innerHTML = ''
     addChatbotMessage('Hi! I can collect a couple of trip details to get started, then answer your travel questions.')
@@ -259,10 +379,11 @@ function resetChatbotConversation() {
     chatbotInput?.focus()
 }
 
-function openChatbot() {
+async function openChatbot() {
     if (!chatbotPanel || !chatbotToggle) return
     chatbotPanel.classList.remove('hidden')
     chatbotToggle.setAttribute('aria-expanded', 'true')
+    await hydrateChatbotContextFromSavedTrips()
     chatbotInput?.focus()
 }
 
@@ -317,7 +438,11 @@ function initChatbot() {
             chatbotIntake.step = 'done'
             window.chatbotIntake = {
                 destination: chatbotIntake.destination,
-                days: chatbotIntake.days
+                days: chatbotIntake.days,
+                budget: chatbotIntake.budget,
+                transport_type: chatbotIntake.transport_type,
+                origin: chatbotIntake.origin,
+                travelers: chatbotIntake.travelers
             }
             addChatbotMessage('Perfect. I saved your destination and trip length. Ask me anything about your trip.')
             setChatbotInputForStep()
@@ -330,7 +455,11 @@ function initChatbot() {
             chatbotIntake.days = correctedDays
             window.chatbotIntake = {
                 destination: chatbotIntake.destination,
-                days: chatbotIntake.days
+                days: chatbotIntake.days,
+                budget: chatbotIntake.budget,
+                transport_type: chatbotIntake.transport_type,
+                origin: chatbotIntake.origin,
+                travelers: chatbotIntake.travelers
             }
             addChatbotMessage(value, 'user')
             addChatbotMessage(`Updated trip length to ${correctedDays} day(s). Now ask your question.`)

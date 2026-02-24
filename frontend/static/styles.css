@@ -711,6 +711,38 @@ input:focus {
     font-size: 14px
 }
 
+.trip-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap
+}
+
+.trip-ai-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    flex-wrap: wrap
+}
+
+.trip-action-btn {
+    padding: 7px 10px;
+    font-size: 12px;
+    border-radius: 8px
+}
+
+.trip-ai-output {
+    margin-top: 8px;
+    padding: 10px;
+    border: 1px solid #d9e9ff;
+    background: #f8fbff;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #0f172a
+}
+
 .actions-panel {
     min-height: 400px
 }
