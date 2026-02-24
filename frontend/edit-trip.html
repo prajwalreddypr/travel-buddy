@@ -17,7 +17,7 @@
                 <div class="subtitle">Update your trip details and get a new estimate</div>
             </div>
             <div class="top-right">
-                <a class="btn ghost" href="http://localhost:8000/profile">Back to Profile</a>
+                <a class="btn ghost" href="/profile">Back to Profile</a>
             </div>
         </header>
 
@@ -48,7 +48,7 @@
                     </div>
                     <div class="actions">
                         <button class="btn primary" type="submit" id="submit-btn">Get Updated Estimate</button>
-                        <a class="btn ghost" href="http://localhost:8000/profile">Cancel</a>
+                        <a class="btn ghost" href="/profile">Cancel</a>
                     </div>
                     <div id="form-error" class="form-error hidden" role="alert"></div>
                 </form>
@@ -74,6 +74,38 @@
         </main>
 
         <div id="loader" class="loader hidden" aria-hidden="true">Loading…</div>
+
+        <div class="chatbot-widget" id="chatbot-widget">
+            <button class="chatbot-toggle" id="chatbot-toggle" type="button" aria-expanded="false"
+                aria-controls="chatbot-panel">
+                <span class="chatbot-toggle-icon">🤖</span>
+                <span>AI Trip Assistant</span>
+            </button>
+
+            <section class="chatbot-panel hidden" id="chatbot-panel" role="dialog" aria-label="AI Trip Assistant">
+                <div class="chatbot-header">
+                    <div class="chatbot-title-wrap">
+                        <div class="chatbot-title">AI Trip Assistant</div>
+                        <div class="chatbot-subtitle">Ask about this trip</div>
+                    </div>
+                    <button class="chatbot-close" id="chatbot-close" type="button" aria-label="Close chatbot">✕</button>
+                </div>
+
+                <div class="chatbot-messages" id="chatbot-messages" aria-live="polite"></div>
+
+                <form class="chatbot-form" id="chatbot-form" novalidate>
+                    <label class="chatbot-label" for="chatbot-input" id="chatbot-input-label">Ask anything about your
+                        trip</label>
+                    <div class="chatbot-input-row">
+                        <input id="chatbot-input" class="chatbot-input" type="text"
+                            placeholder="e.g. optimize this itinerary" autocomplete="off" required />
+                        <button class="btn primary chatbot-send" type="submit">Send</button>
+                    </div>
+                </form>
+
+                <button class="chatbot-reset" id="chatbot-reset" type="button">Start over</button>
+            </section>
+        </div>
 
     </div>
 

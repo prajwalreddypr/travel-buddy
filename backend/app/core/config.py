@@ -57,7 +57,8 @@ class Settings:
             "Help users with destinations, budgeting, itineraries, seasons, transport, visas, and trip tips. "
             "If information is uncertain, say so briefly and suggest checking official sources. "
             "Format answers in a clean structure: short intro, then numbered recommendations and brief actionable tips. "
-            "Keep answers concise and easy to scan."
+            "When a user asks for an N-day itinerary, provide all days from Day 1 through Day N with clear headings and do not omit later days. "
+            "Keep answers easy to scan."
         ),
     )
 

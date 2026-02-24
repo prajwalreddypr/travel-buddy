@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Literal
 from datetime import datetime
 from pydantic import BaseModel, Field, field_validator, model_validator, EmailStr
 from datetime import date
@@ -236,3 +236,36 @@ class ChatHealthResponse(BaseModel):
     model: str = Field(..., description="Configured model name")
     provider_reachable: bool = Field(..., description="Whether provider API is reachable")
     model_available: bool = Field(..., description="Whether configured model exists locally")
+
+
+class ChatFromTripRequest(BaseModel):
+    """Request schema for generating AI chat from a saved trip."""
+    action: Literal["general", "improve_itinerary", "reduce_budget_15", "family_friendly"] = Field(
+        default="general",
+        description="AI action to perform using trusted saved-trip context",
+    )
+    question: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=2000,
+        description="Optional custom question to ask with saved-trip context",
+    )
+
+    @field_validator('question', mode='before')
+    @classmethod
+    def strip_question(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        if isinstance(v, str):
+            v = v.strip()
+        if not v:
+            return None
+        return v
+
+
+class ChatFromTripResponse(BaseModel):
+    """Response schema for AI chat generated from a saved trip."""
+    trip_id: int = Field(..., description="Saved trip ID")
+    action: str = Field(..., description="Action used for generation")
+    reply: str = Field(..., description="Assistant reply")
+    context: Dict[str, str] = Field(..., description="Trusted trip context used for generation")

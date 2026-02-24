@@ -19,6 +19,11 @@ const chatbotInputLabel = document.getElementById('chatbot-input-label')
 const chatbotReset = document.getElementById('chatbot-reset')
 const chatbotSendBtn = chatbotForm?.querySelector('button[type="submit"]')
 
+if (window.location.port === '8000' && window.location.hostname === 'localhost') {
+    const target = `http://127.0.0.1:8000${window.location.pathname}${window.location.search}${window.location.hash}`
+    window.location.replace(target)
+}
+
 const API_BASE = (() => {
     const explicit = window.TRAVEL_BUDDY_API_BASE
     if (typeof explicit === 'string' && explicit.trim()) {
@@ -30,7 +35,22 @@ const API_BASE = (() => {
         return origin
     }
 
+    if (window.location.hostname) {
+        return `${window.location.protocol}//${window.location.hostname}:8000`
+    }
+
     return 'http://127.0.0.1:8000'
+})()
+
+const ALTERNATE_API_BASE = (() => {
+    const host = window.location.hostname
+    if (host === 'localhost') {
+        return `${window.location.protocol}//127.0.0.1:8000`
+    }
+    if (host === '127.0.0.1') {
+        return `${window.location.protocol}//localhost:8000`
+    }
+    return ''
 })()
 let lastQuotePayload = null
 let lastQuoteResponse = null
@@ -39,8 +59,14 @@ let calculatedTotal = null
 const chatbotIntake = {
     destination: '',
     days: '',
+    budget: '',
+    transport_type: '',
+    origin: '',
+    travelers: '',
     step: 'destination'
 }
+const CHAT_PREFILL_STORAGE_KEY = 'travelBuddyChatPrefill'
+let chatbotContextHydrated = false
 
 function formatBotReply(text) {
     let output = String(text || '').trim()
@@ -141,6 +167,21 @@ function addChatbotMessage(text, role = 'bot') {
     chatbotMessages.scrollTop = chatbotMessages.scrollHeight
 }
 
+function showChatbotThinking() {
+    if (!chatbotMessages) return null
+    const bubble = document.createElement('div')
+    bubble.className = 'chatbot-bubble bot thinking'
+    bubble.textContent = 'Thinking…'
+    chatbotMessages.appendChild(bubble)
+    chatbotMessages.scrollTop = chatbotMessages.scrollHeight
+    return bubble
+}
+
+function removeChatbotThinking(bubble) {
+    if (!bubble || !bubble.parentNode) return
+    bubble.parentNode.removeChild(bubble)
+}
+
 function setChatbotInputForStep() {
     if (!chatbotInput || !chatbotInputLabel || !chatbotSendBtn) return
 
@@ -205,7 +246,11 @@ async function requestChatbotReply(message) {
         message,
         context: {
             destination: chatbotIntake.destination || '',
-            days: chatbotIntake.days || ''
+            days: chatbotIntake.days || '',
+            budget: chatbotIntake.budget || '',
+            transport_type: chatbotIntake.transport_type || '',
+            origin: chatbotIntake.origin || '',
+            travelers: chatbotIntake.travelers || ''
         }
     }
 
@@ -246,11 +291,174 @@ async function requestChatbotReply(message) {
     return response.json()
 }
 
+function applyChatbotTripContext(context, introText) {
+    if (!context || typeof context !== 'object') return false
+
+    const destination = String(context.destination || '').trim()
+    const days = String(context.days || '').trim()
+    if (!destination || !days) return false
+
+    chatbotIntake.destination = destination
+    chatbotIntake.days = days
+    chatbotIntake.budget = String(context.budget || '').trim()
+    chatbotIntake.transport_type = String(context.transport_type || '').trim()
+    chatbotIntake.origin = String(context.origin || '').trim()
+    chatbotIntake.travelers = String(context.travelers || '').trim()
+    chatbotIntake.step = 'done'
+
+    window.chatbotIntake = {
+        destination: chatbotIntake.destination,
+        days: chatbotIntake.days,
+        budget: chatbotIntake.budget,
+        transport_type: chatbotIntake.transport_type,
+        origin: chatbotIntake.origin,
+        travelers: chatbotIntake.travelers
+    }
+
+    if (chatbotMessages) {
+        chatbotMessages.innerHTML = ''
+        addChatbotMessage(
+            introText || `Loaded your saved trip to ${destination} for ${days} day(s). Ask anything about this trip.`
+        )
+    }
+
+    setChatbotInputForStep()
+    return true
+}
+
+function extractPrefillContextFromStorage() {
+    const raw = window.localStorage.getItem(CHAT_PREFILL_STORAGE_KEY)
+    if (!raw) return null
+
+    try {
+        const parsed = JSON.parse(raw)
+        window.localStorage.removeItem(CHAT_PREFILL_STORAGE_KEY)
+        return parsed
+    } catch {
+        window.localStorage.removeItem(CHAT_PREFILL_STORAGE_KEY)
+        return null
+    }
+}
+
+function calculateTripDays(startDate, endDate) {
+    if (!startDate || !endDate) return ''
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return ''
+    const millisecondsInDay = 24 * 60 * 60 * 1000
+    const rawDays = Math.floor((end - start) / millisecondsInDay) + 1
+    return String(Math.max(rawDays, 1))
+}
+
+function buildContextFromTrip(trip) {
+    return {
+        destination: String(trip.destination || ''),
+        days: calculateTripDays(trip.start_date, trip.end_date),
+        budget: String(trip.total ?? ''),
+        transport_type: String(trip.transport_type || ''),
+        origin: String(trip.origin || ''),
+        travelers: String(trip.travelers ?? ''),
+    }
+}
+
+function getChatTripIdFromQuery() {
+    const params = new URLSearchParams(window.location.search)
+    const value = params.get('chat_trip_id')
+    if (!value) return null
+    const parsed = Number(value)
+    if (!Number.isInteger(parsed) || parsed < 1) return null
+    return parsed
+}
+
+async function fetchTripByIdForChat(baseUrl, tripId) {
+    const response = await fetch(`${baseUrl}/api/v1/trips/${tripId}`, { credentials: 'include' })
+    if (!response.ok) {
+        throw new Error(`trip_fetch_failed_${response.status}`)
+    }
+    return response.json()
+}
+
+async function hydrateFromTripQueryParam() {
+    const tripId = getChatTripIdFromQuery()
+    if (!tripId) return false
+
+    try {
+        const trip = await fetchTripByIdForChat(API_BASE, tripId)
+        return applyChatbotTripContext(
+            buildContextFromTrip(trip),
+            `Loaded saved trip (${trip.origin} → ${trip.destination}). Ask anything about this plan.`
+        )
+    } catch (err) {
+        if (ALTERNATE_API_BASE && String(err.message || '').includes('trip_fetch_failed_401')) {
+            const pathAndQuery = `${window.location.pathname}${window.location.search}`
+            window.location.href = `${ALTERNATE_API_BASE}${pathAndQuery}`
+            return true
+        }
+        return false
+    }
+}
+
+async function hydrateChatbotContextFromSavedTrips() {
+    if (chatbotContextHydrated) return
+    chatbotContextHydrated = true
+
+    const hydratedFromQuery = await hydrateFromTripQueryParam()
+    if (hydratedFromQuery) {
+        return
+    }
+
+    const prefill = extractPrefillContextFromStorage()
+    if (prefill && applyChatbotTripContext(prefill.context || prefill, prefill.introText)) {
+        return
+    }
+
+    if (chatbotIntake.destination && chatbotIntake.days) {
+        return
+    }
+
+    try {
+        const meRes = await fetch(`${API_BASE}/api/v1/auth/me`, { credentials: 'include' })
+        if (!meRes.ok) return
+
+        const tripsRes = await fetch(`${API_BASE}/api/v1/trips`, { credentials: 'include' })
+        if (!tripsRes.ok) return
+
+        const trips = await tripsRes.json()
+        if (!Array.isArray(trips) || !trips.length) return
+
+        const latest = trips[0]
+        applyChatbotTripContext(
+            {
+                destination: latest.destination,
+                days: calculateTripDays(latest.start_date, latest.end_date),
+                budget: String(latest.total ?? ''),
+                transport_type: String(latest.transport_type || ''),
+                origin: String(latest.origin || ''),
+                travelers: String(latest.travelers ?? ''),
+            },
+            `Loaded your latest saved trip (${latest.origin} → ${latest.destination}). Ask anything about this plan.`
+        )
+    } catch {
+        // Ignore hydration failures and keep manual intake flow.
+    }
+}
+
 function resetChatbotConversation() {
     chatbotIntake.destination = ''
     chatbotIntake.days = ''
+    chatbotIntake.budget = ''
+    chatbotIntake.transport_type = ''
+    chatbotIntake.origin = ''
+    chatbotIntake.travelers = ''
     chatbotIntake.step = 'destination'
-    window.chatbotIntake = { destination: '', days: '' }
+    window.chatbotIntake = {
+        destination: '',
+        days: '',
+        budget: '',
+        transport_type: '',
+        origin: '',
+        travelers: ''
+    }
 
     if (chatbotMessages) chatbotMessages.innerHTML = ''
     addChatbotMessage('Hi! I can collect a couple of trip details to get started, then answer your travel questions.')
@@ -259,10 +467,11 @@ function resetChatbotConversation() {
     chatbotInput?.focus()
 }
 
-function openChatbot() {
+async function openChatbot() {
     if (!chatbotPanel || !chatbotToggle) return
     chatbotPanel.classList.remove('hidden')
     chatbotToggle.setAttribute('aria-expanded', 'true')
+    await hydrateChatbotContextFromSavedTrips()
     chatbotInput?.focus()
 }
 
@@ -317,7 +526,11 @@ function initChatbot() {
             chatbotIntake.step = 'done'
             window.chatbotIntake = {
                 destination: chatbotIntake.destination,
-                days: chatbotIntake.days
+                days: chatbotIntake.days,
+                budget: chatbotIntake.budget,
+                transport_type: chatbotIntake.transport_type,
+                origin: chatbotIntake.origin,
+                travelers: chatbotIntake.travelers
             }
             addChatbotMessage('Perfect. I saved your destination and trip length. Ask me anything about your trip.')
             setChatbotInputForStep()
@@ -330,7 +543,11 @@ function initChatbot() {
             chatbotIntake.days = correctedDays
             window.chatbotIntake = {
                 destination: chatbotIntake.destination,
-                days: chatbotIntake.days
+                days: chatbotIntake.days,
+                budget: chatbotIntake.budget,
+                transport_type: chatbotIntake.transport_type,
+                origin: chatbotIntake.origin,
+                travelers: chatbotIntake.travelers
             }
             addChatbotMessage(value, 'user')
             addChatbotMessage(`Updated trip length to ${correctedDays} day(s). Now ask your question.`)
@@ -343,13 +560,17 @@ function initChatbot() {
         chatbotInput.value = ''
         chatbotInput.disabled = true
         if (chatbotSendBtn) chatbotSendBtn.disabled = true
+        const thinkingBubble = showChatbotThinking()
 
         try {
             const data = await requestChatbotReply(value)
+            removeChatbotThinking(thinkingBubble)
             addChatbotMessage(data.reply || 'I could not generate a response.')
         } catch (err) {
+            removeChatbotThinking(thinkingBubble)
             addChatbotMessage(err.message || 'Something went wrong while getting a response.')
         } finally {
+            removeChatbotThinking(thinkingBubble)
             chatbotInput.disabled = false
             if (chatbotSendBtn) chatbotSendBtn.disabled = false
             chatbotInput.focus()
