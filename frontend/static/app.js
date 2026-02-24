@@ -19,7 +19,19 @@ const chatbotInputLabel = document.getElementById('chatbot-input-label')
 const chatbotReset = document.getElementById('chatbot-reset')
 const chatbotSendBtn = chatbotForm?.querySelector('button[type="submit"]')
 
-const API_BASE = 'http://localhost:8000'
+const API_BASE = (() => {
+    const explicit = window.TRAVEL_BUDDY_API_BASE
+    if (typeof explicit === 'string' && explicit.trim()) {
+        return explicit.trim().replace(/\/$/, '')
+    }
+
+    const origin = window.location.origin
+    if (origin && /^https?:\/\//i.test(origin) && /:8000$/i.test(origin)) {
+        return origin
+    }
+
+    return 'http://127.0.0.1:8000'
+})()
 let lastQuotePayload = null
 let lastQuoteResponse = null
 let selectedTransportOption = null
@@ -30,11 +42,101 @@ const chatbotIntake = {
     step: 'destination'
 }
 
+function formatBotReply(text) {
+    let output = String(text || '').trim()
+    if (!output) return ''
+
+    output = output.replace(/\r\n/g, '\n')
+    output = output.replace(/\*\*(.*?)\*\*/g, '$1')
+
+    output = output.replace(/\s(\d{1,2}\.\s)/g, '\n$1')
+    output = output.replace(/\s-\s+/g, '\n- ')
+    output = output.replace(/\n{3,}/g, '\n\n')
+
+    return output
+}
+
+function renderBotMessageContent(container, text) {
+    const formatted = formatBotReply(text)
+    if (!formatted) return
+
+    const lines = formatted.split('\n').map((line) => line.trimEnd())
+    let activeList = null
+    let activeListType = ''
+
+    function flushList() {
+        if (activeList) {
+            container.appendChild(activeList)
+            activeList = null
+            activeListType = ''
+        }
+    }
+
+    for (const rawLine of lines) {
+        const line = rawLine.trim()
+
+        if (!line) {
+            flushList()
+            continue
+        }
+
+        const headingMatch = line.match(/^#{1,6}\s+(.+)$/)
+        if (headingMatch) {
+            flushList()
+            const heading = document.createElement('div')
+            heading.className = 'chatbot-msg-heading'
+            heading.textContent = headingMatch[1].trim()
+            container.appendChild(heading)
+            continue
+        }
+
+        const orderedMatch = line.match(/^\d+\.\s+(.+)$/)
+        if (orderedMatch) {
+            if (activeListType !== 'ol') {
+                flushList()
+                activeList = document.createElement('ol')
+                activeList.className = 'chatbot-msg-list ordered'
+                activeListType = 'ol'
+            }
+            const item = document.createElement('li')
+            item.textContent = orderedMatch[1].trim()
+            activeList.appendChild(item)
+            continue
+        }
+
+        const unorderedMatch = line.match(/^[-*•]\s+(.+)$/)
+        if (unorderedMatch) {
+            if (activeListType !== 'ul') {
+                flushList()
+                activeList = document.createElement('ul')
+                activeList.className = 'chatbot-msg-list unordered'
+                activeListType = 'ul'
+            }
+            const item = document.createElement('li')
+            item.textContent = unorderedMatch[1].trim()
+            activeList.appendChild(item)
+            continue
+        }
+
+        flushList()
+        const paragraph = document.createElement('p')
+        paragraph.className = 'chatbot-msg-paragraph'
+        paragraph.textContent = line
+        container.appendChild(paragraph)
+    }
+
+    flushList()
+}
+
 function addChatbotMessage(text, role = 'bot') {
     if (!chatbotMessages) return
     const bubble = document.createElement('div')
     bubble.className = `chatbot-bubble ${role}`
-    bubble.textContent = text
+    if (role === 'bot') {
+        renderBotMessageContent(bubble, text)
+    } else {
+        bubble.textContent = String(text)
+    }
     chatbotMessages.appendChild(bubble)
     chatbotMessages.scrollTop = chatbotMessages.scrollHeight
 }
@@ -66,12 +168,82 @@ function setChatbotInputForStep() {
         return
     }
 
-    chatbotInputLabel.textContent = 'Inputs captured. Use Start over to edit.'
+    chatbotInputLabel.textContent = 'Ask anything about your trip'
     chatbotInput.value = ''
-    chatbotInput.placeholder = 'Captured'
-    chatbotInput.disabled = true
-    chatbotSendBtn.disabled = true
-    chatbotSendBtn.textContent = 'Saved'
+    chatbotInput.placeholder = 'e.g. Is 5 days enough for Tokyo?'
+    chatbotInput.type = 'text'
+    chatbotInput.min = ''
+    chatbotInput.disabled = false
+    chatbotSendBtn.disabled = false
+    chatbotSendBtn.textContent = 'Send'
+}
+
+function tryExtractDayCorrection(message) {
+    const text = String(message || '').trim()
+    if (!text) return null
+
+    const lower = text.toLowerCase()
+    const hasCorrectionIntent = /\b(meant|instead|not|correction|correct)\b/.test(lower)
+    const mentionsDays = /\bdays?\b/.test(lower)
+    if (!hasCorrectionIntent || !mentionsDays) return null
+
+    const rangeMatch = text.match(/(\d+)\s*(?:to|-)\s*(\d+)\s*days?/i)
+    if (rangeMatch) {
+        return `${rangeMatch[1]}-${rangeMatch[2]}`
+    }
+
+    const singleMatch = text.match(/(\d+)\s*days?/i)
+    if (singleMatch) {
+        return singleMatch[1]
+    }
+
+    return null
+}
+
+async function requestChatbotReply(message) {
+    const payload = {
+        message,
+        context: {
+            destination: chatbotIntake.destination || '',
+            days: chatbotIntake.days || ''
+        }
+    }
+
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), 45000)
+    let response
+
+    try {
+        response = await fetch(`${API_BASE}/api/v1/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload),
+            signal: controller.signal
+        })
+    } catch (err) {
+        if (err && err.name === 'AbortError') {
+            throw new Error('Chat request timed out. Please try again.')
+        }
+        throw new Error('I could not connect to the chatbot right now. Please try again.')
+    } finally {
+        window.clearTimeout(timeoutId)
+    }
+
+    if (!response.ok) {
+        let detail = 'I could not get a response right now. Please try again.'
+        try {
+            const data = await response.json()
+            if (data && typeof data.detail === 'string' && data.detail.trim()) {
+                detail = data.detail.trim()
+            }
+        } catch {
+            detail = `Chat request failed (${response.status}). Please try again.`
+        }
+        throw new Error(detail)
+    }
+
+    return response.json()
 }
 
 function resetChatbotConversation() {
@@ -81,7 +253,7 @@ function resetChatbotConversation() {
     window.chatbotIntake = { destination: '', days: '' }
 
     if (chatbotMessages) chatbotMessages.innerHTML = ''
-    addChatbotMessage('Hi! I can collect a couple of trip details to get started.')
+    addChatbotMessage('Hi! I can collect a couple of trip details to get started, then answer your travel questions.')
     addChatbotMessage('Where do you want to travel?')
     setChatbotInputForStep()
     chatbotInput?.focus()
@@ -117,7 +289,7 @@ function initChatbot() {
     chatbotClose?.addEventListener('click', closeChatbot)
     chatbotReset?.addEventListener('click', resetChatbotConversation)
 
-    chatbotForm.addEventListener('submit', (event) => {
+    chatbotForm.addEventListener('submit', async (event) => {
         event.preventDefault()
         const raw = chatbotInput?.value ?? ''
         const value = String(raw).trim()
@@ -147,8 +319,40 @@ function initChatbot() {
                 destination: chatbotIntake.destination,
                 days: chatbotIntake.days
             }
-            addChatbotMessage('Perfect. I saved your destination and trip length for the next step.')
+            addChatbotMessage('Perfect. I saved your destination and trip length. Ask me anything about your trip.')
             setChatbotInputForStep()
+            chatbotInput?.focus()
+            return
+        }
+
+        const correctedDays = tryExtractDayCorrection(value)
+        if (correctedDays) {
+            chatbotIntake.days = correctedDays
+            window.chatbotIntake = {
+                destination: chatbotIntake.destination,
+                days: chatbotIntake.days
+            }
+            addChatbotMessage(value, 'user')
+            addChatbotMessage(`Updated trip length to ${correctedDays} day(s). Now ask your question.`)
+            chatbotInput.value = ''
+            chatbotInput.focus()
+            return
+        }
+
+        addChatbotMessage(value, 'user')
+        chatbotInput.value = ''
+        chatbotInput.disabled = true
+        if (chatbotSendBtn) chatbotSendBtn.disabled = true
+
+        try {
+            const data = await requestChatbotReply(value)
+            addChatbotMessage(data.reply || 'I could not generate a response.')
+        } catch (err) {
+            addChatbotMessage(err.message || 'Something went wrong while getting a response.')
+        } finally {
+            chatbotInput.disabled = false
+            if (chatbotSendBtn) chatbotSendBtn.disabled = false
+            chatbotInput.focus()
         }
     })
 }

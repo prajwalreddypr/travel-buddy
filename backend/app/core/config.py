@@ -45,6 +45,25 @@ class Settings:
     auth_cookie_name: str = os.getenv("AUTH_COOKIE_NAME", "travel_buddy_token")
     auth_cookie_secure: bool = os.getenv("AUTH_COOKIE_SECURE", "false").lower() in ("1", "true", "yes")
     auth_cookie_samesite: str = os.getenv("AUTH_COOKIE_SAMESITE", "lax")
+
+    # LLM / Chatbot
+    llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")
+    llm_timeout_seconds: int = int(os.getenv("LLM_TIMEOUT_SECONDS", "30"))
+    llm_max_tokens: int = int(os.getenv("LLM_MAX_TOKENS", "220"))
+    llm_system_prompt: str = os.getenv(
+        "LLM_SYSTEM_PROMPT",
+        (
+            "You are Travel Buddy AI, a concise travel planning assistant. "
+            "Help users with destinations, budgeting, itineraries, seasons, transport, visas, and trip tips. "
+            "If information is uncertain, say so briefly and suggest checking official sources. "
+            "Format answers in a clean structure: short intro, then numbered recommendations and brief actionable tips. "
+            "Keep answers concise and easy to scan."
+        ),
+    )
+
+    # Ollama (local)
+    ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    ollama_model: str = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
     
     def is_development(self) -> bool:
         return self.app_environment.lower() in ("development", "dev")

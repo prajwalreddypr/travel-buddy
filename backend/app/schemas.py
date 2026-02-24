@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 from datetime import datetime
 from pydantic import BaseModel, Field, field_validator, model_validator, EmailStr
 from datetime import date
@@ -204,3 +204,35 @@ class SavedTripResponse(BaseModel):
     transport_type: Optional[str] = Field(default="any", description="Preferred transport type")
     breakdown: Breakdown = Field(..., description="Full cost breakdown")
     total: float = Field(..., ge=0, description="Total trip cost")
+
+
+class ChatRequest(BaseModel):
+    """Request schema for AI chatbot replies."""
+    message: str = Field(..., min_length=1, max_length=2000, description="User message")
+    context: Optional[Dict[str, str]] = Field(
+        default=None,
+        description="Optional chatbot context such as destination and days",
+    )
+
+    @field_validator('message', mode='before')
+    @classmethod
+    def strip_message(cls, v: str) -> str:
+        if isinstance(v, str):
+            v = v.strip()
+        if not v:
+            raise ValueError("Message cannot be empty")
+        return v
+
+
+class ChatResponse(BaseModel):
+    """Response schema for AI chatbot replies."""
+    reply: str = Field(..., description="Assistant reply")
+
+
+class ChatHealthResponse(BaseModel):
+    """Health schema for chatbot provider readiness."""
+    provider: str = Field(..., description="Configured LLM provider")
+    base_url: str = Field(..., description="Provider base URL")
+    model: str = Field(..., description="Configured model name")
+    provider_reachable: bool = Field(..., description="Whether provider API is reachable")
+    model_available: bool = Field(..., description="Whether configured model exists locally")

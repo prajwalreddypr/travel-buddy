@@ -10,6 +10,7 @@ import time
 from app.api.v1 import quote as quote_router
 from app.api.v1 import auth as auth_router
 from app.api.v1 import trips as trips_router
+from app.api.v1 import chat as chat_router
 from app.db.session import init_db
 from app import seed
 from app.core.config import settings
@@ -47,7 +48,7 @@ async def log_requests_middleware(request: Request, call_next):
     start_time = time.time()
     
     # Log incoming request
-    logger.info(f"→ {request.method} {request.url.path}")
+    logger.info(f"REQ {request.method} {request.url.path}")
     
     try:
         response = await call_next(request)
@@ -58,7 +59,7 @@ async def log_requests_middleware(request: Request, call_next):
     # Log response with timing
     process_time = time.time() - start_time
     logger.info(
-        f"← {response.status_code} {request.method} {request.url.path} "
+        f"RES {response.status_code} {request.method} {request.url.path} "
         f"(took {process_time:.3f}s)"
     )
     
@@ -242,6 +243,15 @@ app.include_router(
     responses={
         401: {"description": "Unauthorized"},
         400: {"description": "Bad request"},
+    },
+)
+
+app.include_router(
+    chat_router.router,
+    prefix="/api/v1",
+    responses={
+        400: {"description": "Bad request"},
+        503: {"description": "LLM provider unavailable"},
     },
 )
 
