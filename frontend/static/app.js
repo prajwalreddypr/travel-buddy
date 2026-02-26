@@ -18,6 +18,7 @@ const chatbotInput = document.getElementById('chatbot-input')
 const chatbotInputLabel = document.getElementById('chatbot-input-label')
 const chatbotReset = document.getElementById('chatbot-reset')
 const chatbotSendBtn = chatbotForm?.querySelector('button[type="submit"]')
+const chatbotResizeHandle = document.getElementById('chatbot-resize-handle')
 
 if (window.location.port === '8000' && window.location.hostname === 'localhost') {
     const target = `http://127.0.0.1:8000${window.location.pathname}${window.location.search}${window.location.hash}`
@@ -66,7 +67,80 @@ const chatbotIntake = {
     step: 'destination'
 }
 const CHAT_PREFILL_STORAGE_KEY = 'travelBuddyChatPrefill'
+const CHATBOT_WIDTH_STORAGE_KEY = 'travelBuddyChatbotWidth'
+const CHATBOT_MIN_WIDTH = 320
+const CHATBOT_MAX_WIDTH = 640
 let chatbotContextHydrated = false
+
+function getChatbotMaxWidthForViewport() {
+    return Math.max(CHATBOT_MIN_WIDTH, Math.min(CHATBOT_MAX_WIDTH, window.innerWidth - 20))
+}
+
+function clampChatbotWidth(width) {
+    const parsed = Number(width)
+    if (!Number.isFinite(parsed)) return null
+    const maxWidth = getChatbotMaxWidthForViewport()
+    return Math.min(maxWidth, Math.max(CHATBOT_MIN_WIDTH, Math.round(parsed)))
+}
+
+function applyChatbotWidth(width) {
+    if (!chatbotPanel) return
+    const clamped = clampChatbotWidth(width)
+    if (!clamped) return
+    chatbotPanel.style.width = `${clamped}px`
+}
+
+function loadSavedChatbotWidth() {
+    if (!chatbotPanel) return
+    const savedWidth = window.localStorage.getItem(CHATBOT_WIDTH_STORAGE_KEY)
+    if (!savedWidth) return
+    applyChatbotWidth(savedWidth)
+}
+
+function initChatbotResize() {
+    if (!chatbotPanel || !chatbotResizeHandle) return
+
+    loadSavedChatbotWidth()
+
+    let dragging = false
+    let startX = 0
+    let startWidth = 0
+
+    const onPointerMove = (event) => {
+        if (!dragging) return
+        const nextWidth = startWidth + (startX - event.clientX)
+        applyChatbotWidth(nextWidth)
+    }
+
+    const stopDragging = () => {
+        if (!dragging) return
+        dragging = false
+        chatbotPanel.classList.remove('resizing')
+        const currentWidth = chatbotPanel.getBoundingClientRect().width
+        const clamped = clampChatbotWidth(currentWidth)
+        if (clamped) {
+            chatbotPanel.style.width = `${clamped}px`
+            window.localStorage.setItem(CHATBOT_WIDTH_STORAGE_KEY, String(clamped))
+        }
+        window.removeEventListener('pointermove', onPointerMove)
+        window.removeEventListener('pointerup', stopDragging)
+    }
+
+    chatbotResizeHandle.addEventListener('pointerdown', (event) => {
+        dragging = true
+        startX = event.clientX
+        startWidth = chatbotPanel.getBoundingClientRect().width
+        chatbotPanel.classList.add('resizing')
+        window.addEventListener('pointermove', onPointerMove)
+        window.addEventListener('pointerup', stopDragging)
+    })
+
+    window.addEventListener('resize', () => {
+        const inlineWidth = chatbotPanel.style.width
+        if (!inlineWidth) return
+        applyChatbotWidth(inlineWidth)
+    })
+}
 
 function formatBotReply(text) {
     let output = String(text || '').trim()
@@ -484,6 +558,7 @@ function closeChatbot() {
 function initChatbot() {
     if (!chatbotToggle || !chatbotPanel || !chatbotForm) return
 
+    initChatbotResize()
     resetChatbotConversation()
 
     chatbotToggle.addEventListener('click', () => {
