@@ -44,10 +44,10 @@ flowchart LR
     FE --- FE5
 
     subgraph API Modules
-      A1[/api/v1/auth]
-      A2[/api/v1/quote]
-      A3[/api/v1/trips]
-      A4[/api/v1/chat]
+      A1["/api/v1/auth"]
+      A2["/api/v1/quote"]
+      A3["/api/v1/trips"]
+      A4["/api/v1/chat"]
     end
 
     API --- A1
