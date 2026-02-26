@@ -1,10 +1,14 @@
 :root {
-    --bg: #f7fbfd;
+    --bg: #f8f7ff;
+    --bg-soft: #eef6ff;
     --card: #ffffff;
-    --accent: #004687;
-    --accent-2: #51CF66;
+    --accent: #6d5efc;
+    --accent-2: #5dcfb6;
+    --accent-soft: #ece9ff;
+    --text: #1f2937;
     --muted: #6b7280;
-    --glass: rgba(255, 255, 255, 0.72)
+    --border: #e5e7f4;
+    --glass: rgba(255, 255, 255, 0.82)
 }
 
 * {
@@ -15,8 +19,8 @@
 }
 
 body {
-    background: linear-gradient(180deg, #eef6fb, #f8fbfd);
-    color: #0f172a;
+    background: radial-gradient(circle at top left, #f6f0ff 0%, #eef7ff 45%, #f7fbff 100%);
+    color: var(--text);
     -webkit-font-smoothing: antialiased
 }
 
@@ -55,8 +59,9 @@ body {
 
 .subtitle {
     color: var(--muted);
-    margin-top: 6px;
-    font-size: 13px
+    margin-top: 8px;
+    font-size: 13px;
+    letter-spacing: .2px
 }
 
 .container {
@@ -70,13 +75,13 @@ body {
 
 .panel {
     background: linear-gradient(180deg, var(--glass), var(--card));
-    border-radius: 14px;
-    padding: 18px;
-    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
-    margin-bottom: 16px;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 18px 40px rgba(109, 94, 252, 0.08);
+    margin-bottom: 18px;
     width: 100%;
     max-width: 600px;
-    border-left: 4px solid var(--accent-2);
+    border: 1px solid var(--border)
 }
 
 .form-panel {
@@ -121,9 +126,9 @@ body {
 
 .profile-card {
     padding: 14px;
-    border-radius: 10px;
-    border: 1px solid #eef3f8;
-    background: #fbfdff
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #fcfdff
 }
 
 .field {
@@ -153,16 +158,17 @@ body {
 
 input {
     padding: 12px;
-    border-radius: 10px;
-    border: 1px solid #e6ecf3;
+    border-radius: 12px;
+    border: 1px solid var(--border);
     font-size: 14px;
-    transition: box-shadow .12s ease, border-color .12s ease
+    background: #fff;
+    transition: box-shadow .15s ease, border-color .15s ease, background-color .15s ease
 }
 
 input:focus {
     outline: none;
-    box-shadow: 0 6px 14px rgba(81, 207, 102, 0.15);
-    border-color: var(--accent-2)
+    box-shadow: 0 0 0 4px rgba(109, 94, 252, 0.12);
+    border-color: var(--accent)
 }
 
 .actions {
@@ -178,10 +184,11 @@ input:focus {
 
 .btn {
     padding: 10px 16px;
-    border-radius: 10px;
+    border-radius: 12px;
     border: none;
     cursor: pointer;
-    transition: transform .08s ease, box-shadow .08s ease
+    font-weight: 600;
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease
 }
 
 .btn:active {
@@ -189,21 +196,26 @@ input:focus {
 }
 
 .btn.primary {
-    background: var(--accent);
+    background: linear-gradient(135deg, #7a6cff, var(--accent));
     color: #fff;
-    box-shadow: 0 8px 18px rgba(23, 111, 179, 0.14)
+    box-shadow: 0 10px 22px rgba(109, 94, 252, 0.25)
 }
 
 .btn.primary:hover {
-    box-shadow: 0 8px 18px rgba(0, 70, 135, 0.14);
-    filter: brightness(0.95);
-    border-bottom: 2px solid var(--accent-2);
+    box-shadow: 0 14px 26px rgba(109, 94, 252, 0.3);
+    filter: brightness(0.98);
 }
 
 .btn.ghost {
-    background: transparent;
-    border: 2px solid var(--accent-2);
-    color: var(--accent);
+    background: #fff;
+    border: 1px solid var(--border);
+    color: #4b5563;
+}
+
+.btn.ghost:hover {
+    background: var(--accent-soft);
+    border-color: #dcd7ff;
+    color: #4a3ed9
 }
 
 .muted {
@@ -236,7 +248,7 @@ input:focus {
 .big-total {
     font-size: 20px;
     font-weight: 700;
-    color: var(--accent-2);
+    color: #4a3ed9;
 }
 
 .breakdown {
@@ -247,16 +259,16 @@ input:focus {
 
 .card-small {
     padding: 12px;
-    border-radius: 10px;
-    border: 1px solid #eef3f8;
-    background: #fbfdff
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #fcfdff
 }
 
 .transport-container {
     padding: 12px;
-    border-radius: 10px;
-    border: 1px solid #eef3f8;
-    background: #fbfdff
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #fcfdff
 }
 
 .transport-options {
@@ -268,23 +280,23 @@ input:focus {
 
 .transport-option-card {
     padding: 12px;
-    border-radius: 10px;
-    border: 2px solid #eef3f8;
-    background: #fbfdff;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #fbfcff;
     transition: all 0.2s ease;
     position: relative
 }
 
 .transport-option-card:hover {
-    border-color: var(--accent-2);
-    background: #f0f7ff;
+    border-color: #d8d2ff;
+    background: #f6f4ff;
     transform: translateY(-2px)
 }
 
 .transport-option-card.selected {
-    border-color: var(--accent-2);
-    background: linear-gradient(135deg, rgba(81, 207, 102, 0.05), rgba(0, 70, 135, 0.05));
-    box-shadow: 0 0 0 2px var(--accent-2)
+    border-color: #c8c0ff;
+    background: linear-gradient(135deg, rgba(109, 94, 252, 0.08), rgba(93, 207, 182, 0.1));
+    box-shadow: 0 0 0 2px rgba(109, 94, 252, 0.18)
 }
 
 .transport-option-header {
@@ -296,7 +308,7 @@ input:focus {
 
 .transport-price {
     font-weight: 700;
-    color: var(--accent-2);
+    color: #3f35be;
     white-space: nowrap;
     font-size: 14px
 }
@@ -327,11 +339,11 @@ input:focus {
 
 .form-error {
     margin-top: 10px;
-    color: #862e2e;
-    background: #fff1f2;
+    color: #8b2f5a;
+    background: #fff3f8;
     padding: 8px;
-    border-radius: 8px;
-    border: 1px solid #f8d7da
+    border-radius: 10px;
+    border: 1px solid #ffd4e5
 }
 
 /* Loader */
@@ -340,10 +352,10 @@ input:focus {
     right: 18px;
     bottom: 18px;
     padding: 10px 14px;
-    background: #004687;
+    background: linear-gradient(135deg, #7a6cff, #6d5efc);
     color: #fff;
     border-radius: 999px;
-    box-shadow: 0 8px 26px rgba(0, 70, 135, 0.18);
+    box-shadow: 0 12px 28px rgba(109, 94, 252, 0.28);
     transform: translateY(10px);
     transition: transform .18s ease, opacity .18s ease
 }
@@ -373,7 +385,7 @@ input:focus {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: linear-gradient(135deg, var(--accent), #0059ab);
+    background: linear-gradient(135deg, #7a6cff, var(--accent));
     color: #fff;
     border: none;
     border-radius: 999px;
@@ -381,13 +393,13 @@ input:focus {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 12px 24px rgba(0, 70, 135, 0.25);
+    box-shadow: 0 12px 24px rgba(109, 94, 252, 0.28);
     transition: transform .15s ease, box-shadow .15s ease
 }
 
 .chatbot-toggle:hover {
     transform: translateY(-1px);
-    box-shadow: 0 14px 28px rgba(0, 70, 135, 0.3)
+    box-shadow: 0 14px 28px rgba(109, 94, 252, 0.34)
 }
 
 .chatbot-toggle-icon {
@@ -404,13 +416,41 @@ input:focus {
     width: min(360px, calc(100vw - 20px));
     background: #fff;
     border-radius: 16px;
-    border: 1px solid #e6ecf3;
-    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
-    overflow: hidden
+    border: 1px solid var(--border);
+    box-shadow: 0 18px 40px rgba(109, 94, 252, 0.16);
+    overflow: hidden;
+    position: relative
+}
+
+.chatbot-resize-handle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 18px;
+    height: 18px;
+    cursor: nwse-resize;
+    touch-action: none;
+    z-index: 2
+}
+
+.chatbot-resize-handle::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-top: 2px solid #cfc8ff;
+    border-left: 2px solid #cfc8ff;
+    border-top-left-radius: 6px
+}
+
+.chatbot-panel.resizing {
+    user-select: none
 }
 
 .chatbot-header {
-    background: linear-gradient(135deg, rgba(0, 70, 135, 0.95), rgba(0, 89, 171, 0.95));
+    background: linear-gradient(135deg, rgba(122, 108, 255, 0.95), rgba(109, 94, 252, 0.95));
     color: #fff;
     padding: 12px 14px;
     display: flex;
@@ -432,7 +472,7 @@ input:focus {
 
 .chatbot-close {
     border: none;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.25);
     color: #fff;
     width: 26px;
     height: 26px;
@@ -448,7 +488,7 @@ input:focus {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background: #f8fbff
+    background: #f9f8ff
 }
 
 .chatbot-bubble {
@@ -462,9 +502,9 @@ input:focus {
 
 .chatbot-bubble.bot {
     align-self: flex-start;
-    background: #eaf3ff;
-    color: #0f172a;
-    border: 1px solid #d9e9ff;
+    background: #f0eeff;
+    color: var(--text);
+    border: 1px solid #ddd8ff;
     white-space: normal
 }
 
@@ -475,7 +515,7 @@ input:focus {
 
 .chatbot-bubble.user {
     align-self: flex-end;
-    background: var(--accent);
+    background: linear-gradient(135deg, #7a6cff, var(--accent));
     color: #fff;
     white-space: pre-wrap
 }
@@ -483,7 +523,7 @@ input:focus {
 .chatbot-msg-heading {
     font-weight: 700;
     margin: 0 0 8px;
-    color: #0b3c74
+    color: #4a3ed9
 }
 
 .chatbot-msg-paragraph {
@@ -510,7 +550,7 @@ input:focus {
 
 .chatbot-form {
     padding: 12px 14px 10px;
-    border-top: 1px solid #edf2f7;
+    border-top: 1px solid var(--border);
     background: #fff
 }
 
@@ -539,7 +579,7 @@ input:focus {
     width: calc(100% - 28px);
     margin: 0 14px 12px;
     background: transparent;
-    border: 1px solid #d7e2ee;
+    border: 1px solid var(--border);
     color: #334155;
     border-radius: 10px;
     padding: 9px 10px;
@@ -548,7 +588,7 @@ input:focus {
 }
 
 .chatbot-reset:hover {
-    background: #f8fafc
+    background: var(--accent-soft)
 }
 
 .warning-message {
@@ -627,7 +667,7 @@ input:focus {
 }
 
 .account-panel {
-    background: linear-gradient(135deg, var(--accent) 0%, #003560 100%);
+    background: linear-gradient(135deg, #7a6cff 0%, #5f53d6 100%);
     border: none;
     color: #fff
 }
@@ -683,9 +723,9 @@ input:focus {
 
 .trip-card-vertical {
     padding: 14px;
-    border-radius: 10px;
-    border: 1px solid #eef3f8;
-    background: #fbfdff;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #fcfdff;
     border-left: 4px solid var(--accent-2);
     display: flex;
     flex-direction: column;
@@ -693,7 +733,7 @@ input:focus {
 }
 
 .trip-card-vertical:hover {
-    background: #f0f7ff;
+    background: #f6f4ff;
     border-left-color: var(--accent)
 }
 
@@ -711,7 +751,7 @@ input:focus {
 
 .trip-total {
     font-weight: 700;
-    color: var(--accent-2);
+    color: #3f35be;
     white-space: nowrap;
     font-size: 14px
 }
@@ -739,13 +779,13 @@ input:focus {
 .trip-ai-output {
     margin-top: 8px;
     padding: 10px;
-    border: 1px solid #d9e9ff;
-    background: #f8fbff;
+    border: 1px solid #ddd8ff;
+    background: #f8f7ff;
     border-radius: 8px;
     white-space: pre-wrap;
     font-size: 12px;
     line-height: 1.4;
-    color: #0f172a
+    color: var(--text)
 }
 
 .actions-panel {
@@ -769,7 +809,7 @@ input:focus {
 
 .plan-trip-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(0, 70, 135, 0.2)
+    box-shadow: 0 12px 24px rgba(109, 94, 252, 0.24)
 }
 
 @media (max-width:600px) {
@@ -832,6 +872,10 @@ input:focus {
 
     .chatbot-panel {
         width: min(360px, calc(100vw - 14px))
+    }
+
+    .chatbot-resize-handle {
+        display: none
     }
 
     .landing-page .loader {
