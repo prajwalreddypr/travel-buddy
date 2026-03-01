@@ -1,4 +1,5 @@
 from sqlmodel import create_engine, Session, SQLModel
+from sqlalchemy import text
 from app.core.config import settings
 from app.logger import get_logger
 from typing import Generator
@@ -42,19 +43,19 @@ def get_session() -> Generator[Session, None, None]:
 def init_db() -> None:
     """Initialize database tables.
     
-    Call this once at application startup to create all tables.
+    In migration-managed environments, this validates connectivity.
+    In local/dev/test mode, it can still auto-create tables for convenience.
     """
     try:
-        logger.info("Initializing database tables...")
-        SQLModel.metadata.create_all(engine)
-        logger.info("Database initialized successfully")
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+
+        if settings.db_auto_create_tables:
+            logger.info("Auto-creating database tables (DB_AUTO_CREATE_TABLES=true)...")
+            SQLModel.metadata.create_all(engine)
+            logger.info("Database tables initialized")
+        else:
+            logger.info("Database connectivity verified (DB_AUTO_CREATE_TABLES=false)")
     except Exception as e:
         logger.error(f"Failed to initialize database: {str(e)}", exc_info=True)
         raise
-
-
-# Ensure tables exist when module is loaded (helps tests/imports)
-try:
-    init_db()
-except Exception as e:
-    logger.warning(f"Could not initialize DB on module load: {e}")

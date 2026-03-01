@@ -27,6 +27,7 @@ cp .env.prod .env
 **Key environment variables:**
 - `APP_ENVIRONMENT`: `development` or `production`
 - `DATABASE_URL`: SQLite (default) or PostgreSQL for production
+- `DB_AUTO_CREATE_TABLES`: `true` for local convenience, `false` when using Alembic-managed schema
 - `LOG_LEVEL`: `info`, `debug`, `warning`
 - `MAX_TRAVELERS`: Maximum travelers per trip (default: 20)
 - `MAX_TRIP_DAYS`: Maximum trip duration in days (default: 365)
@@ -42,6 +43,8 @@ cp .env.prod .env
 - `LLM_MAX_CONTEXT_VALUE_CHARS`: Max chars per context value (default: 256)
 - `API_RATE_LIMIT_REQUESTS`: Requests allowed per window for protected paths (default: 120)
 - `API_RATE_LIMIT_WINDOW_SECONDS`: Rate-limit window in seconds (default: 60)
+- `API_RATE_LIMIT_BACKEND`: `memory` (single instance) or `redis` (distributed)
+- `REDIS_URL`: Redis connection URL for distributed rate limiting
 
 ### 3. Run the Application
 
@@ -72,7 +75,7 @@ curl http://localhost:8000/api/v1/chat/health
 
 ## Production-Oriented Compose
 
-`docker-compose.yml` now separates API and database services and includes optional Ollama service.
+`docker-compose.yml` now separates API, database, and Redis services and includes optional Ollama service.
 
 - Backend + Postgres only (recommended on lighter machines if Ollama already runs locally):
 
@@ -87,6 +90,20 @@ docker compose --profile ai up -d
 ```
 
 For lowest local resource usage, run only Postgres in Docker and keep Ollama outside Docker.
+
+## Database Migrations (Alembic)
+
+Schema changes are managed with Alembic.
+
+```bash
+# Apply latest schema
+alembic upgrade head
+
+# Create a new migration after model changes
+alembic revision --autogenerate -m "describe change"
+```
+
+In Docker, backend startup runs `alembic upgrade head` automatically before starting Uvicorn.
 
 ## API Documentation
 

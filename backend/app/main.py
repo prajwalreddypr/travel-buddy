@@ -14,16 +14,32 @@ from app.api.v1 import chat as chat_router
 from app.db.session import init_db
 from app import seed
 from app.core.config import settings
-from app.core.rate_limit import InMemoryRateLimiter
+from app.core.rate_limit import InMemoryRateLimiter, RateLimiter, create_rate_limiter
 from app.schemas import HealthResponse
 from app.logger import get_logger
 
 logger = get_logger(__name__)
 
-rate_limiter = InMemoryRateLimiter(
-    max_requests=settings.api_rate_limit_requests,
-    window_seconds=settings.api_rate_limit_window_seconds,
-)
+try:
+    rate_limiter: RateLimiter = create_rate_limiter(
+        backend=settings.api_rate_limit_backend,
+        max_requests=settings.api_rate_limit_requests,
+        window_seconds=settings.api_rate_limit_window_seconds,
+        redis_url=settings.redis_url,
+        redis_key_prefix=settings.redis_rate_limit_prefix,
+        redis_connect_timeout_seconds=settings.redis_connect_timeout_seconds,
+        redis_socket_timeout_seconds=settings.redis_socket_timeout_seconds,
+    )
+except Exception as exc:
+    logger.warning(
+        "Failed to initialize configured rate limiter backend '%s': %s. Falling back to in-memory limiter.",
+        settings.api_rate_limit_backend,
+        str(exc),
+    )
+    rate_limiter = InMemoryRateLimiter(
+        max_requests=settings.api_rate_limit_requests,
+        window_seconds=settings.api_rate_limit_window_seconds,
+    )
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -74,7 +90,7 @@ async def log_requests_middleware(request: Request, call_next):
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    """Apply simple process-local rate limiting to protected API paths."""
+    """Apply configurable rate limiting to protected API paths."""
     if not settings.api_rate_limit_enabled:
         return await call_next(request)
 
@@ -84,7 +100,11 @@ async def rate_limit_middleware(request: Request, call_next):
 
     client_host = request.client.host if request.client else "unknown"
     key = f"{client_host}:{path}"
-    allowed, _count, retry_after = await rate_limiter.allow(key)
+    try:
+        allowed, _count, retry_after = await rate_limiter.allow(key)
+    except Exception as exc:
+        logger.warning("Rate limiter check failed; allowing request: %s", str(exc), exc_info=True)
+        return await call_next(request)
 
     if not allowed:
         retry_after_seconds = max(1, int(retry_after))
@@ -143,8 +163,12 @@ def on_startup():
 
 
 @app.on_event("shutdown")
-def on_shutdown():
+async def on_shutdown():
     """Cleanup on shutdown."""
+    try:
+        await rate_limiter.close()
+    except Exception as exc:
+        logger.warning("Rate limiter shutdown cleanup failed: %s", str(exc))
     logger.info("Application shutting down...")
 
 
