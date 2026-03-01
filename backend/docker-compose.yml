@@ -6,9 +6,14 @@ services:
     environment:
       - APP_ENVIRONMENT=production
       - DATABASE_URL=postgresql://travelbuddy:travelbuddy@postgres:5432/travel_buddy
+      - DB_AUTO_CREATE_TABLES=false
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - API_RATE_LIMIT_BACKEND=redis
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     volumes:
       - ./:/app
@@ -28,6 +33,16 @@ services:
       test: ["CMD-SHELL", "pg_isready -U travelbuddy -d travel_buddy"]
       interval: 10s
       timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
       retries: 5
 
   ollama:

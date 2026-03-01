@@ -14,6 +14,7 @@ def _parse_csv_env(value: str, default: list[str]) -> list[str]:
 class Settings:
     # Database
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///./travel.db")
+    db_auto_create_tables: bool = os.getenv("DB_AUTO_CREATE_TABLES", "true").lower() in ("1", "true", "yes")
     db_pool_size: int = int(os.getenv("DB_POOL_SIZE", "5"))
     db_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW", "10"))
     db_pool_timeout: int = int(os.getenv("DB_POOL_TIMEOUT", "30"))
@@ -41,12 +42,17 @@ class Settings:
     max_trip_days: int = int(os.getenv("MAX_TRIP_DAYS", "365"))
     min_trip_days: int = 1
     api_rate_limit_enabled: bool = os.getenv("API_RATE_LIMIT_ENABLED", "true").lower() in ("1", "true", "yes")
+    api_rate_limit_backend: str = os.getenv("API_RATE_LIMIT_BACKEND", "memory").strip().lower()
     api_rate_limit_requests: int = int(os.getenv("API_RATE_LIMIT_REQUESTS", "120"))
     api_rate_limit_window_seconds: int = int(os.getenv("API_RATE_LIMIT_WINDOW_SECONDS", "60"))
     api_rate_limit_paths: list = _parse_csv_env(
         os.getenv("API_RATE_LIMIT_PATHS", ""),
         ["/api/v1/chat", "/api/v1/chat/from-trip"],
     )
+    redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    redis_rate_limit_prefix: str = os.getenv("REDIS_RATE_LIMIT_PREFIX", "travel_buddy:rl")
+    redis_connect_timeout_seconds: float = float(os.getenv("REDIS_CONNECT_TIMEOUT_SECONDS", "1.5"))
+    redis_socket_timeout_seconds: float = float(os.getenv("REDIS_SOCKET_TIMEOUT_SECONDS", "1.5"))
     
     # Defaults for pricing (if city not found in DB)
     default_accommodation_per_night: float = 100.0
