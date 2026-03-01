@@ -1,10 +1,44 @@
 version: '3.8'
+
 services:
   backend:
     build: .
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=sqlite:///./travel.db
+      - APP_ENVIRONMENT=production
+      - DATABASE_URL=postgresql://travelbuddy:travelbuddy@postgres:5432/travel_buddy
+      - OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - ./:/app
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: travel_buddy
+      POSTGRES_USER: travelbuddy
+      POSTGRES_PASSWORD: travelbuddy
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U travelbuddy -d travel_buddy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ai"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  postgres_data:
+  ollama_data:

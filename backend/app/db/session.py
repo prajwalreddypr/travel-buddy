@@ -13,8 +13,10 @@ engine = create_engine(
         "check_same_thread": False  # Allow SQLite access from multiple threads
     } if "sqlite" in settings.database_url else {},
     pool_pre_ping=True,  # Verify connections before using them
-    pool_size=5,
-    max_overflow=10,
+    pool_size=settings.db_pool_size,
+    max_overflow=settings.db_max_overflow,
+    pool_timeout=settings.db_pool_timeout,
+    pool_recycle=settings.db_pool_recycle,
 )
 
 

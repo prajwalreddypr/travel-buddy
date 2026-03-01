@@ -4,9 +4,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _parse_csv_env(value: str, default: list[str]) -> list[str]:
+    if not value:
+        return default
+    parsed = [item.strip() for item in value.split(",") if item.strip()]
+    return parsed or default
+
+
 class Settings:
     # Database
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///./travel.db")
+    db_pool_size: int = int(os.getenv("DB_POOL_SIZE", "5"))
+    db_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW", "10"))
+    db_pool_timeout: int = int(os.getenv("DB_POOL_TIMEOUT", "30"))
+    db_pool_recycle: int = int(os.getenv("DB_POOL_RECYCLE", "1800"))
     
     # Server
     app_host: str = os.getenv("APP_HOST", "0.0.0.0")
@@ -29,6 +40,13 @@ class Settings:
     max_travelers: int = int(os.getenv("MAX_TRAVELERS", "20"))
     max_trip_days: int = int(os.getenv("MAX_TRIP_DAYS", "365"))
     min_trip_days: int = 1
+    api_rate_limit_enabled: bool = os.getenv("API_RATE_LIMIT_ENABLED", "true").lower() in ("1", "true", "yes")
+    api_rate_limit_requests: int = int(os.getenv("API_RATE_LIMIT_REQUESTS", "120"))
+    api_rate_limit_window_seconds: int = int(os.getenv("API_RATE_LIMIT_WINDOW_SECONDS", "60"))
+    api_rate_limit_paths: list = _parse_csv_env(
+        os.getenv("API_RATE_LIMIT_PATHS", ""),
+        ["/api/v1/chat", "/api/v1/chat/from-trip"],
+    )
     
     # Defaults for pricing (if city not found in DB)
     default_accommodation_per_night: float = 100.0
@@ -50,6 +68,27 @@ class Settings:
     llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")
     llm_timeout_seconds: int = int(os.getenv("LLM_TIMEOUT_SECONDS", "30"))
     llm_max_tokens: int = int(os.getenv("LLM_MAX_TOKENS", "220"))
+    llm_retry_attempts: int = int(os.getenv("LLM_RETRY_ATTEMPTS", "2"))
+    llm_max_concurrent_requests: int = int(os.getenv("LLM_MAX_CONCURRENT_REQUESTS", "2"))
+    llm_queue_wait_timeout_seconds: int = int(os.getenv("LLM_QUEUE_WAIT_TIMEOUT_SECONDS", "20"))
+    llm_max_message_chars: int = int(os.getenv("LLM_MAX_MESSAGE_CHARS", "2000"))
+    llm_max_context_items: int = int(os.getenv("LLM_MAX_CONTEXT_ITEMS", "12"))
+    llm_max_context_value_chars: int = int(os.getenv("LLM_MAX_CONTEXT_VALUE_CHARS", "256"))
+    llm_context_allowed_keys: list = _parse_csv_env(
+        os.getenv("LLM_CONTEXT_ALLOWED_KEYS", ""),
+        [
+            "origin",
+            "destination",
+            "start_date",
+            "end_date",
+            "days",
+            "travelers",
+            "transport_type",
+            "budget",
+            "food_total",
+            "misc_total",
+        ],
+    )
     llm_system_prompt: str = os.getenv(
         "LLM_SYSTEM_PROMPT",
         (
