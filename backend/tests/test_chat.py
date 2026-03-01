@@ -4,14 +4,17 @@ import json
 from datetime import date
 
 import pytest
+import httpx
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
 from app.auth.security import get_current_user
+from app.core.config import settings
 from app.db.session import get_session
 from app.main import app
 from app.models import SavedTrip, User
+from app.services.llm import _extract_ollama_reply, generate_chat_reply
 
 
 client = TestClient(app)
@@ -47,6 +50,191 @@ def test_chat_endpoint_validation_error():
     assert response.status_code == 422
 
 
+def test_chat_endpoint_unsupported_provider_returns_503(monkeypatch):
+    original_provider = settings.llm_provider
+    monkeypatch.setattr(settings, "llm_provider", "unsupported-provider")
+
+    response = client.post(
+        "/api/v1/chat",
+        json={
+            "message": "Plan me a Rome trip",
+            "context": {"destination": "Rome", "days": "4"},
+        },
+    )
+
+    monkeypatch.setattr(settings, "llm_provider", original_provider)
+
+    assert response.status_code == 503
+    assert "Unsupported LLM provider" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_generate_chat_reply_returns_fallback_on_timeout(monkeypatch):
+    original_provider = settings.llm_provider
+    monkeypatch.setattr(settings, "llm_provider", "ollama")
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def post(self, *args, **kwargs):
+            raise httpx.TimeoutException("timeout")
+
+    monkeypatch.setattr("app.services.llm.httpx.AsyncClient", FakeAsyncClient)
+
+    reply = await generate_chat_reply("Trip help", {"destination": "Lisbon", "days": "3"})
+
+    monkeypatch.setattr(settings, "llm_provider", original_provider)
+
+    assert "trouble reaching the AI model" in reply
+
+
+@pytest.mark.asyncio
+async def test_generate_chat_reply_raises_runtime_error_on_4xx(monkeypatch):
+    original_provider = settings.llm_provider
+    monkeypatch.setattr(settings, "llm_provider", "ollama")
+
+    class FakeResponse:
+        status_code = 400
+
+        def raise_for_status(self):
+            request = httpx.Request("POST", "http://localhost:11434/api/chat")
+            raise httpx.HTTPStatusError("bad request", request=request, response=self)
+
+        def json(self):
+            return {}
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def post(self, *args, **kwargs):
+            return FakeResponse()
+
+    monkeypatch.setattr("app.services.llm.httpx.AsyncClient", FakeAsyncClient)
+
+    with pytest.raises(RuntimeError) as exc_info:
+        await generate_chat_reply("Trip help", {"destination": "Lisbon", "days": "3"})
+
+    monkeypatch.setattr(settings, "llm_provider", original_provider)
+
+    assert "rejected the request" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_generate_chat_reply_retries_transient_failure_then_succeeds(monkeypatch):
+    original_provider = settings.llm_provider
+    monkeypatch.setattr(settings, "llm_provider", "ollama")
+    monkeypatch.setattr(settings, "llm_retry_attempts", 2)
+
+    calls = {"count": 0}
+
+    class FakeResponse:
+        status_code = 200
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"message": {"content": "Recovered response"}}
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def post(self, *args, **kwargs):
+            calls["count"] += 1
+            if calls["count"] == 1:
+                raise httpx.TimeoutException("timeout")
+            return FakeResponse()
+
+    async def fake_sleep(_seconds: float):
+        return None
+
+    monkeypatch.setattr("app.services.llm.httpx.AsyncClient", FakeAsyncClient)
+    monkeypatch.setattr("app.services.llm.asyncio.sleep", fake_sleep)
+
+    reply = await generate_chat_reply("Trip help", {"destination": "Lisbon", "days": "3"})
+
+    monkeypatch.setattr(settings, "llm_provider", original_provider)
+
+    assert calls["count"] == 2
+    assert reply == "Recovered response"
+
+
+@pytest.mark.asyncio
+async def test_generate_chat_reply_applies_guardrails(monkeypatch):
+    original_provider = settings.llm_provider
+    monkeypatch.setattr(settings, "llm_provider", "ollama")
+    monkeypatch.setattr(settings, "llm_max_message_chars", 10)
+    monkeypatch.setattr(settings, "llm_max_context_items", 2)
+    monkeypatch.setattr(settings, "llm_max_context_value_chars", 6)
+    monkeypatch.setattr(settings, "llm_context_allowed_keys", ["destination", "days"])
+
+    captured = {"body": None}
+
+    class FakeResponse:
+        status_code = 200
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"message": {"content": "Guardrails ok"}}
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def post(self, *args, **kwargs):
+            captured["body"] = kwargs.get("json")
+            return FakeResponse()
+
+    monkeypatch.setattr("app.services.llm.httpx.AsyncClient", FakeAsyncClient)
+
+    reply = await generate_chat_reply(
+        "  this message should truncate  ",
+        {
+            "destination": "  tokyo-city  ",
+            "days": " 123456789 ",
+            "ignored": "must-not-pass",
+        },
+    )
+
+    monkeypatch.setattr(settings, "llm_provider", original_provider)
+
+    assert reply == "Guardrails ok"
+    user_message = captured["body"]["messages"][1]["content"]
+    assert "User question: this messa" in user_message
+    assert "destination: tokyo-" in user_message
+    assert "days: 123456" in user_message
+    assert "ignored" not in user_message
+
+
 def test_chat_health_endpoint(monkeypatch):
     async def fake_health():
         return {
@@ -66,6 +254,11 @@ def test_chat_health_endpoint(monkeypatch):
     assert data["provider"] == "ollama"
     assert data["provider_reachable"] is True
     assert data["model_available"] is True
+
+
+def test_extract_ollama_reply_rejects_invalid_payload_shape():
+    assert _extract_ollama_reply({"message": {"content": 123}}) == ""
+    assert _extract_ollama_reply({"not_message": {"content": "hello"}}) == ""
 
 
 @pytest.fixture(name="session")

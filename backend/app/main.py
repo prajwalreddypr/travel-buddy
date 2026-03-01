@@ -14,10 +14,16 @@ from app.api.v1 import chat as chat_router
 from app.db.session import init_db
 from app import seed
 from app.core.config import settings
+from app.core.rate_limit import InMemoryRateLimiter
 from app.schemas import HealthResponse
 from app.logger import get_logger
 
 logger = get_logger(__name__)
+
+rate_limiter = InMemoryRateLimiter(
+    max_requests=settings.api_rate_limit_requests,
+    window_seconds=settings.api_rate_limit_window_seconds,
+)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -64,6 +70,31 @@ async def log_requests_middleware(request: Request, call_next):
     )
     
     return response
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    """Apply simple process-local rate limiting to protected API paths."""
+    if not settings.api_rate_limit_enabled:
+        return await call_next(request)
+
+    path = request.url.path
+    if not any(path.startswith(prefix) for prefix in settings.api_rate_limit_paths):
+        return await call_next(request)
+
+    client_host = request.client.host if request.client else "unknown"
+    key = f"{client_host}:{path}"
+    allowed, _count, retry_after = await rate_limiter.allow(key)
+
+    if not allowed:
+        retry_after_seconds = max(1, int(retry_after))
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Rate limit exceeded. Please retry shortly."},
+            headers={"Retry-After": str(retry_after_seconds)},
+        )
+
+    return await call_next(request)
 
 
 # Security headers middleware

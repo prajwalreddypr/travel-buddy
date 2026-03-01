@@ -34,6 +34,14 @@ cp .env.prod .env
 - `OLLAMA_BASE_URL`: Ollama API URL (default: `http://localhost:11434`)
 - `OLLAMA_MODEL`: Local model name (default: `llama3.1:8b`)
 - `LLM_TIMEOUT_SECONDS`: Request timeout for chat responses (default: 30)
+- `LLM_RETRY_ATTEMPTS`: Retries for transient Ollama failures (default: 2)
+- `LLM_MAX_CONCURRENT_REQUESTS`: Max in-flight model requests per API process (default: 2)
+- `LLM_QUEUE_WAIT_TIMEOUT_SECONDS`: Max queue wait before 503 for busy model (default: 20)
+- `LLM_MAX_MESSAGE_CHARS`: Max user message chars sent to model (default: 2000)
+- `LLM_MAX_CONTEXT_ITEMS`: Max context fields passed to model (default: 12)
+- `LLM_MAX_CONTEXT_VALUE_CHARS`: Max chars per context value (default: 256)
+- `API_RATE_LIMIT_REQUESTS`: Requests allowed per window for protected paths (default: 120)
+- `API_RATE_LIMIT_WINDOW_SECONDS`: Rate-limit window in seconds (default: 60)
 
 ### 3. Run the Application
 
@@ -61,6 +69,24 @@ Optional readiness check:
 ```bash
 curl http://localhost:8000/api/v1/chat/health
 ```
+
+## Production-Oriented Compose
+
+`docker-compose.yml` now separates API and database services and includes optional Ollama service.
+
+- Backend + Postgres only (recommended on lighter machines if Ollama already runs locally):
+
+```bash
+docker compose up -d backend postgres
+```
+
+- Backend + Postgres + Ollama in Docker:
+
+```bash
+docker compose --profile ai up -d
+```
+
+For lowest local resource usage, run only Postgres in Docker and keep Ollama outside Docker.
 
 ## API Documentation
 
