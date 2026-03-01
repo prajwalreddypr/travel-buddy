@@ -14,6 +14,7 @@ services:
         condition: service_healthy
     volumes:
       - ./:/app
+      - ../frontend:/frontend:ro
 
   postgres:
     image: postgres:16-alpine
