@@ -30,10 +30,10 @@
                         <div class="account-content">
                             <div class="option-title">Account</div>
                             <div id="profile-email" class="muted">Email: —</div>
-                            <div class="muted" style="margin-top:8px">Phone: Coming soon</div>
-                            <div class="muted" style="margin-top:8px">More profile features coming soon</div>
+                            <div class="muted account-phone">Phone: Coming soon</div>
+                            <div class="muted account-note">More profile features coming soon</div>
                         </div>
-                        <div id="auth-status" class="auth-status muted" style="text-align:right;font-size:12px;">
+                        <div id="auth-status" class="auth-status muted account-status">
                             Loading…</div>
                     </div>
                 </section>
@@ -54,12 +54,13 @@
                     <!-- Right: Actions & Future Content -->
                     <section class="panel actions-panel">
                         <div class="actions-content">
-                            <button class="btn primary plan-trip-btn" id="plan-trip-btn"
-                                style="width:100%;margin-bottom:20px;">
-                                ✓ Plan New Trip
-                            </button>
+                            <div class="plan-trip-btn-wrap">
+                                <button class="btn primary plan-trip-btn" id="plan-trip-btn">
+                                    ✓ Plan New Trip
+                                </button>
+                            </div>
                             <div class="muted">Use saved-trip AI actions from the trip cards.</div>
-                            <div id="ai-global-status" class="muted" style="min-height:18px;">AI assistant ready.</div>
+                            <div id="ai-global-status" class="muted ai-global-status">AI assistant ready.</div>
                         </div>
                     </section>
                 </div>
