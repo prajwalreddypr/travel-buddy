@@ -167,6 +167,10 @@ class UserCreate(BaseModel):
     """Schema for user registration."""
     email: EmailStr = Field(..., description="User email address")
     password: str = Field(..., min_length=8, max_length=72, description="User password")
+    full_name: Optional[str] = Field(default=None, max_length=120, description="Full name")
+    phone: Optional[str] = Field(default=None, max_length=30, description="Phone number")
+    address: Optional[str] = Field(default=None, max_length=300, description="Home address")
+    countries_visited: Optional[int] = Field(default=None, ge=0, description="Number of countries visited")
 
 
 class UserLogin(BaseModel):
@@ -179,6 +183,10 @@ class UserResponse(BaseModel):
     """Schema for user response."""
     id: int = Field(..., description="User ID")
     email: EmailStr = Field(..., description="User email address")
+    full_name: Optional[str] = Field(default=None, description="Full name")
+    phone: Optional[str] = Field(default=None, description="Phone number")
+    address: Optional[str] = Field(default=None, description="Home address")
+    countries_visited: Optional[int] = Field(default=None, description="Number of countries visited")
 
 
 class SavedTripCreate(BaseModel):

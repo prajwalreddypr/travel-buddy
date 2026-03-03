@@ -132,13 +132,13 @@ async def add_security_headers(request: Request, call_next):
     # Enable XSS protection
     response.headers["X-XSS-Protection"] = "1; mode=block"
     
-    # Content Security Policy (strict)
+    # Content Security Policy
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline'; "  # Allow inline for simple frontend
-        "style-src 'self' 'unsafe-inline'; "
-        "img-src 'self' data:; "
-        "font-src 'self'"
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "img-src 'self' data: https://flagcdn.com; "
+        "font-src 'self' https://fonts.gstatic.com"
     )
     
     # Prevent referrer leaking
@@ -218,6 +218,19 @@ def index():
             content={"detail": "Frontend not found"},
         )
     return FileResponse(index_path)
+
+
+@app.get("/signup", tags=["frontend"])
+def signup_page():
+    """Serve the frontend signup.html."""
+    signup_path = os.path.join(frontend_root, "signup.html")
+    if not os.path.exists(signup_path):
+        logger.warning(f"Frontend signup.html not found at {signup_path}")
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "Signup page not found"},
+        )
+    return FileResponse(signup_path)
 
 
 @app.get("/login", tags=["frontend"])

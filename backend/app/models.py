@@ -12,6 +12,10 @@ class User(SQLModel, table=True):
     email: str = Field(index=True, unique=True, description="User email")
     hashed_password: str = Field(description="Hashed password")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Account creation time")
+    full_name: Optional[str] = Field(default=None, max_length=120, description="Full name")
+    phone: Optional[str] = Field(default=None, max_length=30, description="Phone number")
+    address: Optional[str] = Field(default=None, max_length=300, description="Home address")
+    countries_visited: Optional[int] = Field(default=None, ge=0, description="Number of countries visited")
 
 
 class SavedTrip(SQLModel, table=True):

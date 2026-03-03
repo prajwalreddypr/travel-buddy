@@ -33,6 +33,12 @@ _ITINERARY_INTENT_PATTERN = re.compile(r"\b(itinerary|day\s*-?\s*wise|daywise|da
 _SINGLE_FAMOUS_FOOD_PATTERN = re.compile(
     r"\b(one|single|just\s+one|most\s+famous|famous)\b.*\b(dish|food|meal)\b|\b(dish|food|meal)\b.*\b(one|single|just\s+one|most\s+famous|famous)\b"
 )
+_CASUAL_MESSAGE_PATTERN = re.compile(
+    r"^(thanks?(\s+(?:you|a\s+lot|so\s+much|very\s+much))?|thank\s+you|ok(ay)?|cool|great|got\s+it"
+    r"|bye|goodbye|see\s+you|cheers|awesome|perfect|noted|sure|sounds?\s+good|nice|wonderful"
+    r"|brilliant|excellent|appreciate\s+it|no\s+worries|np|haha|lol|wow|good|alright|yep|yup|yeah)[\s!.,]*$",
+    re.IGNORECASE,
+)
 
 
 class OllamaMessage(BaseModel):
@@ -183,6 +189,14 @@ def _fallback_reply(context: Optional[Dict[str, str]] = None) -> str:
 
 def _build_response_style_instruction(message: str) -> str:
     normalized_message = message.strip().lower()
+
+    if bool(_CASUAL_MESSAGE_PATTERN.match(normalized_message)):
+        return (
+            "Response style rule: The user sent a casual social message. "
+            "Reply in one short, friendly sentence only (max 12 words). "
+            "Do not provide travel advice, tips, lists, or itineraries."
+        )
+
     asks_for_itinerary = bool(_ITINERARY_INTENT_PATTERN.search(normalized_message))
     asks_single_famous_food = bool(_SINGLE_FAMOUS_FOOD_PATTERN.search(normalized_message))
 
@@ -203,6 +217,11 @@ def _build_response_style_instruction(message: str) -> str:
 
 def _build_user_content(message: str, context: Optional[Dict[str, str]] = None) -> str:
     style_instruction = _build_response_style_instruction(message)
+
+    # Casual messages (thanks, ok, cool, bye…) — skip context injection entirely
+    if bool(_CASUAL_MESSAGE_PATTERN.match(message.strip().lower())):
+        return "\n\n".join([style_instruction, f"User message: {message}"])
+
     if not context:
         if not style_instruction:
             return message

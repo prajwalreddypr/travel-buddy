@@ -653,7 +653,35 @@ function initChatbot() {
     })
 }
 
-initChatbot()
+;(async function initChatbotIfLoggedIn() {
+    try {
+        const res = await fetch(`${API_BASE}/api/v1/auth/me`, { credentials: 'include' })
+        if (res.ok) {
+            // Swap header buttons to reflect logged-in state
+            const loginBtn = document.getElementById('header-login-btn')
+            const signupBtn = document.getElementById('header-signup-btn')
+            if (loginBtn) {
+                loginBtn.textContent = 'Dashboard'
+                loginBtn.href = `${API_BASE}/profile`
+            }
+            if (signupBtn) {
+                signupBtn.textContent = 'Sign Out'
+                signupBtn.removeAttribute('href')
+                signupBtn.addEventListener('click', async (e) => {
+                    e.preventDefault()
+                    await fetch(`${API_BASE}/api/v1/auth/logout`, { method: 'POST', credentials: 'include' })
+                    window.location.reload()
+                })
+            }
+
+            const widget = document.getElementById('chatbot-widget')
+            if (widget) widget.classList.remove('hidden')
+            initChatbot()
+        }
+    } catch {
+        // not logged in — keep chatbot hidden
+    }
+})()
 
 function formatCurrency(v) { return '$' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
 
@@ -835,12 +863,12 @@ function renderResult(data) {
     breakdown.innerHTML = ''
 
     // Set first transport option as default if not already selected
-    if (!selectedTransportOption && data.breakdown.transport.length > 0) {
+    if (!selectedTransportOption && Array.isArray(data.breakdown.transport) && data.breakdown.transport.length > 0) {
         selectedTransportOption = data.breakdown.transport[0]
     }
 
     // Calculate the correct initial total based on selected transport
-    if (selectedTransportOption && data.breakdown.transport.length > 0) {
+    if (selectedTransportOption && Array.isArray(data.breakdown.transport) && data.breakdown.transport.length > 0) {
         const transport = selectedTransportOption.price
         const accommodation = data.breakdown.accommodation.total
         const food = data.breakdown.food
@@ -851,6 +879,7 @@ function renderResult(data) {
     }
 
     // Transport (clickable options)
+    if (Array.isArray(data.breakdown.transport) && data.breakdown.transport.length > 0) {
     const t = document.createElement('div'); t.className = 'transport-container'
     const transportTitle = document.createElement('div'); transportTitle.className = 'option-title'; transportTitle.textContent = 'Transport'; transportTitle.style.marginBottom = '12px'
     t.appendChild(transportTitle)
@@ -882,6 +911,7 @@ function renderResult(data) {
     })
     t.appendChild(transportOptions)
     breakdown.appendChild(t); fadeIn(t)
+    } // end transport guard
 
     // Accommodation
     const a = document.createElement('div'); a.className = 'card-small';
