@@ -1,6 +1,7 @@
 """LLM service for chatbot responses."""
 
 import asyncio
+import re
 from time import perf_counter
 from typing import Dict, Optional, Any
 from uuid import uuid4
@@ -27,6 +28,11 @@ _DEFAULT_CONTEXT_KEY_WHITELIST = {
     "food_total",
     "misc_total",
 }
+
+_ITINERARY_INTENT_PATTERN = re.compile(r"\b(itinerary|day\s*-?\s*wise|daywise|day\s*\d+|plan|schedule)\b")
+_SINGLE_FAMOUS_FOOD_PATTERN = re.compile(
+    r"\b(one|single|just\s+one|most\s+famous|famous)\b.*\b(dish|food|meal)\b|\b(dish|food|meal)\b.*\b(one|single|just\s+one|most\s+famous|famous)\b"
+)
 
 
 class OllamaMessage(BaseModel):
@@ -175,17 +181,54 @@ def _fallback_reply(context: Optional[Dict[str, str]] = None) -> str:
     )
 
 
+def _build_response_style_instruction(message: str) -> str:
+    normalized_message = message.strip().lower()
+    asks_for_itinerary = bool(_ITINERARY_INTENT_PATTERN.search(normalized_message))
+    asks_single_famous_food = bool(_SINGLE_FAMOUS_FOOD_PATTERN.search(normalized_message))
+
+    if asks_single_famous_food and not asks_for_itinerary:
+        return (
+            "Response style rule: User asked for one famous dish. "
+            "Return exactly one dish name and one short sentence (max 20 words) about why it is famous. "
+            "Do not provide a list, tips list, day-wise plan, or itinerary."
+        )
+
+    if not asks_for_itinerary:
+        return (
+            "Response style rule: Do not provide day-wise itinerary unless the user explicitly asks for itinerary or day-wise planning."
+        )
+
+    return ""
+
+
 def _build_user_content(message: str, context: Optional[Dict[str, str]] = None) -> str:
+    style_instruction = _build_response_style_instruction(message)
     if not context:
-        return message
+        if not style_instruction:
+            return message
+        return "\n\n".join([style_instruction, f"User question: {message}"])
 
     safe_context = {k: v for k, v in context.items() if isinstance(v, str) and v.strip()}
     if not safe_context:
-        return message
+        if not style_instruction:
+            return message
+        return "\n\n".join([style_instruction, f"User question: {message}"])
+
+    if "one famous dish" in style_instruction.lower():
+        reduced_context: Dict[str, str] = {}
+        for key in ("destination", "origin", "budget"):
+            value = safe_context.get(key)
+            if value:
+                reduced_context[key] = value
+        if reduced_context:
+            safe_context = reduced_context
 
     lines = ["User trip context:"]
     for key, value in safe_context.items():
         lines.append(f"- {key}: {value}")
+    if style_instruction:
+        lines.append("")
+        lines.append(style_instruction)
     lines.append("")
     lines.append(f"User question: {message}")
     return "\n".join(lines)
