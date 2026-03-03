@@ -262,12 +262,25 @@ async function requestChatbotReply(message) {
         }
     }
 
-    const response = await fetch(`${API_BASE}/api/v1/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(payload)
-    })
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), 45000)
+    let response
+    try {
+        response = await fetch(`${API_BASE}/api/v1/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload),
+            signal: controller.signal
+        })
+    } catch (err) {
+        if (err && err.name === 'AbortError') {
+            throw new Error('Chat request timed out. Please try again.')
+        }
+        throw new Error('I could not connect to the chatbot right now. Please try again.')
+    } finally {
+        window.clearTimeout(timeoutId)
+    }
 
     if (!response.ok) {
         let detail = 'I could not get a response right now. Please try again.'

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Travel Buddy — Sign Up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
+
+<body>
+    <div class="page">
+        <header class="top">
+            <div class="top-left">
+                <div class="brand">✈️ Travel <span class="accent">Buddy</span></div>
+                <div class="subtitle">Create your account and start planning</div>
+            </div>
+            <div class="top-right">
+                <a class="btn ghost" href="/">Home</a>
+                <a class="btn ghost" href="/login">Sign In</a>
+            </div>
+        </header>
+
+        <main class="container">
+            <section class="panel auth-panel signup-panel">
+                <div class="auth-header">
+                    <div>
+                        <h3>Create Account</h3>
+                        <div class="muted">Fill in your details to get started</div>
+                    </div>
+                </div>
+
+                <form id="signup-form" class="auth-form" novalidate>
+                    <div class="signup-fields">
+
+                        <div class="signup-section-label">Personal Info</div>
+
+                        <label class="field">
+                            <span>Full Name <span class="field-required">*</span></span>
+                            <input name="full_name" type="text" placeholder="e.g. Alex Johnson"
+                                autocomplete="name" maxlength="120" required />
+                        </label>
+
+                        <label class="field">
+                            <span>Email <span class="field-required">*</span></span>
+                            <input name="email" type="email" placeholder="you@example.com"
+                                autocomplete="email" required />
+                        </label>
+
+                        <div class="field-row">
+                            <label class="field">
+                                <span>Password <span class="field-required">*</span></span>
+                                <input name="password" type="password" placeholder="Min 8 characters"
+                                    autocomplete="new-password" minlength="8" maxlength="72" required />
+                            </label>
+                            <label class="field">
+                                <span>Confirm Password <span class="field-required">*</span></span>
+                                <input name="confirm_password" type="password" placeholder="Repeat password"
+                                    autocomplete="new-password" maxlength="72" required />
+                            </label>
+                        </div>
+
+                        <div class="signup-section-label">Contact &amp; Location</div>
+
+                        <div class="field">
+                            <span>Phone Number</span>
+                            <div class="phone-wrap">
+                                <div class="phone-picker" id="phone-picker">
+                                    <button type="button" class="phone-country-btn" id="phone-country-btn"
+                                        aria-haspopup="listbox" aria-expanded="false"
+                                        aria-label="Select country code">
+                                        <span class="phone-flag" id="phone-flag"></span>
+                                        <span class="phone-dial" id="phone-dial">+1</span>
+                                        <span class="phone-chevron">▾</span>
+                                    </button>
+                                    <div class="phone-dropdown hidden" id="phone-dropdown">
+                                        <input type="text" class="phone-search" id="phone-search"
+                                            placeholder="Search country…" autocomplete="off" />
+                                        <ul class="phone-list" id="phone-list" role="listbox"
+                                            aria-label="Countries"></ul>
+                                    </div>
+                                </div>
+                                <input type="tel" class="phone-number" id="phone-number"
+                                    placeholder="Enter number" autocomplete="off" maxlength="20" />
+                            </div>
+                        </div>
+
+                        <label class="field">
+                            <span>Home Address</span>
+                            <input name="address" type="text" placeholder="e.g. 42 Maple St, New York, USA"
+                                autocomplete="street-address" maxlength="300" />
+                        </label>
+
+                        <div class="signup-section-label">Travel Experience</div>
+
+                        <label class="field field-small">
+                            <span>Countries Visited</span>
+                            <input name="countries_visited" type="number" min="0" max="195"
+                                placeholder="e.g. 12" />
+                            <div class="field-hint">How many countries have you visited so far?</div>
+                        </label>
+
+                    </div>
+
+                    <div class="actions signup-actions">
+                        <button class="btn primary" type="submit" id="signup-btn">Create Account</button>
+                        <a class="btn ghost" href="/login">Already have an account?</a>
+                    </div>
+
+                    <div id="signup-error" class="form-error hidden" role="alert"></div>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/signup.js"></script>
+</body>
+
+</html>
