@@ -323,7 +323,10 @@ function hideError() {
 async function getErrorMessage(res, fallback) {
   try {
     const data = await res.json()
-    return data.detail || fallback
+    if (!data.detail) return fallback
+    if (typeof data.detail === 'string') return data.detail
+    if (Array.isArray(data.detail)) return data.detail.map(e => e.msg || String(e)).join(', ')
+    return fallback
   } catch {
     return fallback
   }
