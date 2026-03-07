@@ -16,6 +16,12 @@ class User(SQLModel, table=True):
     phone: Optional[str] = Field(default=None, max_length=30, description="Phone number")
     address: Optional[str] = Field(default=None, max_length=300, description="Home address")
     countries_visited: Optional[int] = Field(default=None, ge=0, description="Number of countries visited")
+    passport_nationality: Optional[str] = Field(default=None, max_length=80, description="Passport country name")
+    home_city: Optional[str] = Field(default=None, max_length=100, description="Home city for flight searches")
+    has_schengen_visa: Optional[bool] = Field(default=None, description="Holds a valid Schengen visa")
+    has_us_visa: Optional[bool] = Field(default=None, description="Holds a valid US visa")
+    travel_style: Optional[str] = Field(default=None, max_length=20, description="budget / mid / luxury")
+    budget_eur: Optional[int] = Field(default=None, ge=0, description="Max trip budget in EUR")
 
 
 class SavedTrip(SQLModel, table=True):

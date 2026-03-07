@@ -25,52 +25,85 @@
         </header>
 
         <main class="container">
-            <section class="panel form-panel">
+            <section class="search-card">
                 <form id="quote-form" novalidate>
-                    <div class="fields">
-                        <label class="field"><span>Origin</span><input name="origin" placeholder="e.g. Berlin"
-                                required /></label>
-                        <label class="field"><span>Destination</span><input name="destination" placeholder="e.g. Paris"
-                                required /></label>
-                        <div class="field half field-with-note">
-                            <label><span>Start</span><input name="start_date" type="date" required /></label>
-                            <div id="start-date-warning" class="warning-message hidden" role="alert">Start date must
-                                be today or later</div>
-                        </div>
-                        <div class="field half field-with-note">
-                            <label><span>End</span><input name="end_date" type="date" required /></label>
-                            <div id="end-date-warning" class="warning-message hidden" role="alert">End date must be
-                                the same or after start date</div>
-                        </div>
-                        <div class="field small field-with-note">
-                            <label><span>Travelers</span><input name="travelers" type="number" min="1" max="20"
-                                    value="1" required /></label>
-                            <div id="traveler-warning" class="warning-message hidden" role="alert">Maximum 20
-                                passengers allowed</div>
-                        </div>
+
+                    <!-- Transport type tabs -->
+                    <div class="search-tabs" role="tablist" aria-label="Transport type">
+                        <button type="button" class="search-tab active" data-transport="any">🌍 Any</button>
+                        <button type="button" class="search-tab" data-transport="flight">✈️ Flight</button>
+                        <button type="button" class="search-tab" data-transport="train">🚆 Train</button>
+                        <button type="button" class="search-tab" data-transport="bus">🚌 Bus</button>
+                        <button type="button" class="search-tab" data-transport="car">🚗 Car</button>
                     </div>
-                    <div class="actions">
-                        <button class="btn primary" type="submit" id="submit-btn">Get Estimate</button>
-                        <button class="btn ghost" type="button" id="reset-btn">Reset</button>
+                    <input type="hidden" name="transport_type" id="transport-type-input" value="any" />
+
+                    <div class="search-body">
+
+                        <!-- Origin / Destination row -->
+                        <div class="search-od-row">
+                            <div class="search-field">
+                                <span class="search-field-label">From</span>
+                                <input class="search-input" name="origin" placeholder="City or country"
+                                    autocomplete="off" required />
+                            </div>
+                            <button type="button" class="search-swap-btn" id="swap-btn"
+                                aria-label="Swap origin and destination">⇌</button>
+                            <div class="search-field">
+                                <span class="search-field-label">To</span>
+                                <input class="search-input" name="destination" placeholder="City or country"
+                                    autocomplete="off" required />
+                            </div>
+                        </div>
+
+                        <!-- Dates + Travelers + CTA row -->
+                        <div class="search-dt-row">
+                            <div class="search-field">
+                                <span class="search-field-label">Departure</span>
+                                <input class="search-input" name="start_date" type="date" required />
+                                <div id="start-date-warning" class="warning-message hidden" role="alert">Must be
+                                    today or later</div>
+                            </div>
+                            <div class="search-field">
+                                <span class="search-field-label">Return</span>
+                                <input class="search-input" name="end_date" type="date" required />
+                                <div id="end-date-warning" class="warning-message hidden" role="alert">Must be on or
+                                    after departure</div>
+                            </div>
+                            <div class="search-field search-field-travelers">
+                                <span class="search-field-label">Travelers</span>
+                                <input class="search-input" name="travelers" type="number" min="1" max="20" value="1"
+                                    required />
+                                <div id="traveler-warning" class="warning-message hidden" role="alert">Max 20
+                                    passengers</div>
+                            </div>
+                            <div class="search-cta-col">
+                                <button class="btn primary search-cta-btn" type="submit"
+                                    id="submit-btn">Get Estimate</button>
+                                <button class="btn ghost search-reset-btn" type="button" id="reset-btn">Reset</button>
+                            </div>
+                        </div>
+
+                        <div id="form-error" class="form-error hidden" role="alert"></div>
                     </div>
-                    <div id="form-error" class="form-error hidden" role="alert"></div>
                 </form>
             </section>
 
             <section class="panel result-panel hidden" id="result">
-                <div class="result-header">
-                    <div class="result-left">
-                        <h3 id="summary">Quote</h3>
-                        <div id="meta" class="muted">Detailed breakdown below</div>
+                <div class="res-header">
+                    <div>
+                        <h3 id="summary" class="res-title">Quote</h3>
+                        <div id="meta" class="muted res-meta">Select a transport option below</div>
                     </div>
-                    <div class="result-right">
+                    <div class="res-total-wrap">
+                        <div class="muted res-total-label">Est. Total</div>
                         <div id="total" class="big-total">—</div>
                     </div>
                 </div>
-                <div id="breakdown" class="breakdown"></div>
-                <div class="actions">
+                <div id="breakdown"></div>
+                <div class="res-actions">
                     <button class="btn" id="new-quote">New Quote</button>
-                    <button class="btn primary" id="save-trip">Save your trip</button>
+                    <button class="btn primary" id="save-trip">Save Trip</button>
                 </div>
                 <div id="save-status" class="muted hidden" role="status"></div>
             </section>

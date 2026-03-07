@@ -1,8 +1,7 @@
 """Travel Buddy API - Main application entry point."""
 
 from fastapi import FastAPI, Request
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import time
@@ -194,95 +193,6 @@ def health_check() -> HealthResponse:
         version=settings.app_version,
         environment=settings.app_environment,
     )
-
-
-# ===== FRONTEND SERVING =====
-
-frontend_root = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
-)
-static_dir = os.path.join(frontend_root, "static")
-
-# Mount static files
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
-
-@app.get("/", tags=["frontend"])
-def index():
-    """Serve the frontend index.html."""
-    index_path = os.path.join(frontend_root, "index.html")
-    if not os.path.exists(index_path):
-        logger.warning(f"Frontend index.html not found at {index_path}")
-        return JSONResponse(
-            status_code=404,
-            content={"detail": "Frontend not found"},
-        )
-    return FileResponse(index_path)
-
-
-@app.get("/signup", tags=["frontend"])
-def signup_page():
-    """Serve the frontend signup.html."""
-    signup_path = os.path.join(frontend_root, "signup.html")
-    if not os.path.exists(signup_path):
-        logger.warning(f"Frontend signup.html not found at {signup_path}")
-        return JSONResponse(
-            status_code=404,
-            content={"detail": "Signup page not found"},
-        )
-    return FileResponse(signup_path)
-
-
-@app.get("/login", tags=["frontend"])
-def login_page():
-    """Serve the frontend login.html."""
-    login_path = os.path.join(frontend_root, "login.html")
-    if not os.path.exists(login_path):
-        logger.warning(f"Frontend login.html not found at {login_path}")
-        return JSONResponse(
-            status_code=404,
-            content={"detail": "Login page not found"},
-        )
-    return FileResponse(login_path)
-
-
-@app.get("/trips", tags=["frontend"])
-def trips_page():
-    """Serve the frontend trips.html."""
-    trips_path = os.path.join(frontend_root, "trips.html")
-    if not os.path.exists(trips_path):
-        logger.warning(f"Frontend trips.html not found at {trips_path}")
-        return JSONResponse(
-            status_code=404,
-            content={"detail": "Trips page not found"},
-        )
-    return FileResponse(trips_path)
-
-
-@app.get("/profile", tags=["frontend"])
-def profile_page():
-    """Serve the frontend profile.html."""
-    profile_path = os.path.join(frontend_root, "profile.html")
-    if not os.path.exists(profile_path):
-        logger.warning(f"Frontend profile.html not found at {profile_path}")
-        return JSONResponse(
-            status_code=404,
-            content={"detail": "Profile page not found"},
-        )
-    return FileResponse(profile_path)
-
-
-@app.get("/edit-trip", tags=["frontend"])
-def edit_trip_page():
-    """Serve the frontend edit-trip.html."""
-    edit_trip_path = os.path.join(frontend_root, "edit-trip.html")
-    if not os.path.exists(edit_trip_path):
-        logger.warning(f"Frontend edit-trip.html not found at {edit_trip_path}")
-        return JSONResponse(
-            status_code=404,
-            content={"detail": "Edit trip page not found"},
-        )
-    return FileResponse(edit_trip_path)
 
 
 # ===== API ROUTES =====

@@ -7,6 +7,7 @@ from sqlmodel import Session, select
 from app.schemas import TripRequest, TransportOption, AccommodationEstimate
 from app.models import CityStats
 from app.providers.mock_provider import MockProvider
+from app.providers.rome2rio_provider import Rome2RioProvider
 from app.exceptions import ProviderException, DatabaseException
 from app.logger import get_logger
 from app.core.config import settings
@@ -29,7 +30,16 @@ async def get_transport_options(
         ProviderException: If transport provider fails
     """
     try:
-        provider = MockProvider()
+        if settings.rome2rio_api_key:
+            logger.info("Using Rome2Rio provider for transport costs")
+            provider = Rome2RioProvider(
+                api_key=settings.rome2rio_api_key,
+                timeout=settings.provider_timeout_seconds,
+            )
+        else:
+            logger.info("No ROME2RIO_API_KEY set — using MockProvider")
+            provider = MockProvider()
+
         price_infos = await provider.get_prices(
             trip_request.origin,
             trip_request.destination,
