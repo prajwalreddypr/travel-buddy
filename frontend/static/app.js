@@ -691,10 +691,44 @@ function showLoader(show = true) {
     loader.setAttribute('aria-hidden', String(!show))
 }
 
-function clearResult() { breakdown.innerHTML = ''; summary.textContent = 'Quote'; resultPanel.classList.add('hidden'); document.getElementById('total').textContent = '—'; formError?.classList.add('hidden'); formError.textContent = ''; selectedTransportOption = null; calculatedTotal = null }
+function clearResult() {
+    breakdown.innerHTML = ''
+    summary.textContent = 'Quote'
+    document.getElementById('meta').textContent = 'Select a transport option below'
+    resultPanel.classList.add('hidden')
+    document.getElementById('total').textContent = '—'
+    formError?.classList.add('hidden')
+    formError.textContent = ''
+    selectedTransportOption = null
+    calculatedTotal = null
+}
+
+// ---- Transport type tabs ----
+const searchTabs = document.querySelectorAll('.search-tab[data-transport]')
+const transportTypeInput = document.getElementById('transport-type-input')
+
+function setActiveTransportTab(transport) {
+    searchTabs.forEach(t => t.classList.toggle('active', t.dataset.transport === transport))
+    if (transportTypeInput) transportTypeInput.value = transport
+}
+searchTabs.forEach(tab => tab.addEventListener('click', () => setActiveTransportTab(tab.dataset.transport)))
+
+// ---- Swap button ----
+const swapBtn = document.getElementById('swap-btn')
+const originInput = document.querySelector('input[name="origin"]')
+const destInput = document.querySelector('input[name="destination"]')
+swapBtn?.addEventListener('click', () => {
+    if (!originInput || !destInput) return
+    const temp = originInput.value
+    originInput.value = destInput.value
+    destInput.value = temp
+    swapBtn.style.transform = 'rotate(180deg)'
+    setTimeout(() => { swapBtn.style.transform = '' }, 250)
+})
 
 resetBtn?.addEventListener('click', () => {
     form.reset()
+    setActiveTransportTab('any')
     saveStatus?.classList.add('hidden')
     saveStatus.textContent = ''
     startDateWarning?.classList.add('hidden')
@@ -817,7 +851,7 @@ form.addEventListener('submit', async (e) => {
     submitBtn.textContent = 'Loading…'
     showLoader(true)
 
-    const payload = { origin: fd.get('origin'), destination: fd.get('destination'), start_date: fd.get('start_date'), end_date: fd.get('end_date'), travelers: Number(fd.get('travelers') || 1) }
+    const payload = { origin: fd.get('origin'), destination: fd.get('destination'), start_date: fd.get('start_date'), end_date: fd.get('end_date'), travelers: Number(fd.get('travelers') || 1), transport_type: fd.get('transport_type') || 'any' }
     lastQuotePayload = payload
 
     try {
@@ -826,10 +860,9 @@ form.addEventListener('submit', async (e) => {
             throw new Error('Please check your inputs and try again.')
         }
         const data = await res.json()
-        renderResult(data)
         lastQuoteResponse = data
+        renderResult(data)
         resultPanel.classList.remove('hidden')
-        document.getElementById('total').textContent = formatCurrency(data.breakdown.total)
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
     } catch (err) {
         formError.textContent = err.message || String(err)
@@ -858,70 +891,110 @@ function updateTotalWithTransport(selectedOption) {
     document.getElementById('total').textContent = formatCurrency(newTotal)
 }
 
+const TRANSPORT_ICONS = { flight: '✈️', train: '🚆', bus: '🚌', car: '🚗', ferry: '⛴️' }
+
 function renderResult(data) {
-    summary.textContent = `${data.trip_days} day(s)`
     breakdown.innerHTML = ''
 
-    // Set first transport option as default if not already selected
-    if (!selectedTransportOption && Array.isArray(data.breakdown.transport) && data.breakdown.transport.length > 0) {
-        selectedTransportOption = data.breakdown.transport[0]
+    const travelers = lastQuotePayload?.travelers || 1
+    const origin = lastQuotePayload?.origin || ''
+    const dest = lastQuotePayload?.destination || ''
+    summary.textContent = `${origin} → ${dest}  ·  ${data.trip_days} day${data.trip_days !== 1 ? 's' : ''}  ·  ${travelers} traveler${travelers !== 1 ? 's' : ''}`
+    document.getElementById('meta').textContent = 'Select a transport option to see full cost'
+
+    const transports = Array.isArray(data.breakdown.transport) ? data.breakdown.transport : []
+    if (!selectedTransportOption && transports.length > 0) {
+        selectedTransportOption = transports[0]
     }
 
-    // Calculate the correct initial total based on selected transport
-    if (selectedTransportOption && Array.isArray(data.breakdown.transport) && data.breakdown.transport.length > 0) {
-        const transport = selectedTransportOption.price
-        const accommodation = data.breakdown.accommodation.total
-        const food = data.breakdown.food
-        const misc = data.breakdown.misc
-        calculatedTotal = transport + accommodation + food + misc
+    const baseCosts = data.breakdown.accommodation.total + data.breakdown.food + data.breakdown.misc
+    calculatedTotal = selectedTransportOption ? (selectedTransportOption.price + baseCosts) : data.breakdown.total
+    document.getElementById('total').textContent = formatCurrency(calculatedTotal)
+
+    // ── Transport cards ──
+    const transportSection = document.createElement('div')
+    transportSection.className = 'res-transport-section'
+
+    const sectionLabel = document.createElement('div')
+    sectionLabel.className = 'res-section-label'
+    sectionLabel.textContent = 'Choose how you want to travel'
+    transportSection.appendChild(sectionLabel)
+
+    if (transports.length === 0) {
+        const empty = document.createElement('div')
+        empty.className = 'res-no-options'
+        empty.innerHTML = `<span style="font-size:28px">🚫</span><div>No options available for this route and transport mode.</div><div style="margin-top:4px">Try selecting <strong>Any</strong> to see all options.</div>`
+        transportSection.appendChild(empty)
     } else {
-        calculatedTotal = data.breakdown.total
+        const cards = document.createElement('div')
+        cards.className = 'res-transport-cards'
+
+        transports.forEach(opt => {
+            const card = document.createElement('div')
+            card.className = 'res-transport-card'
+            if (selectedTransportOption && selectedTransportOption.transport_type === opt.transport_type) {
+                card.classList.add('selected')
+            }
+            const icon = TRANSPORT_ICONS[(opt.transport_type || '').toLowerCase()] || '🚀'
+            const totalWithThis = formatCurrency(opt.price + baseCosts)
+            card.innerHTML = `
+                <div class="res-tc-left">
+                    <span class="res-tc-icon">${icon}</span>
+                    <div class="res-tc-info">
+                        <div class="res-tc-provider">${opt.provider}</div>
+                        <div class="res-tc-type">${opt.transport_type}</div>
+                        ${opt.notes ? `<div class="res-tc-notes muted">${opt.notes}</div>` : ''}
+                    </div>
+                </div>
+                <div class="res-tc-right">
+                    <div class="res-tc-price">${formatCurrency(opt.price)}</div>
+                    <div class="res-tc-subtotal muted">Total: ${totalWithThis}</div>
+                </div>
+            `
+            card.addEventListener('click', () => {
+                cards.querySelectorAll('.res-transport-card').forEach(c => c.classList.remove('selected'))
+                card.classList.add('selected')
+                selectedTransportOption = opt
+                updateTotalWithTransport(opt)
+            })
+            cards.appendChild(card)
+        })
+        transportSection.appendChild(cards)
     }
 
-    // Transport (clickable options)
-    if (Array.isArray(data.breakdown.transport) && data.breakdown.transport.length > 0) {
-    const t = document.createElement('div'); t.className = 'transport-container'
-    const transportTitle = document.createElement('div'); transportTitle.className = 'option-title'; transportTitle.textContent = 'Transport'; transportTitle.style.marginBottom = '12px'
-    t.appendChild(transportTitle)
+    breakdown.appendChild(transportSection)
+    fadeIn(transportSection)
 
-    const transportOptions = document.createElement('div'); transportOptions.className = 'transport-options'
-    data.breakdown.transport.forEach(opt => {
-        const optionCard = document.createElement('div')
-        optionCard.className = 'transport-option-card'
-        if (selectedTransportOption && selectedTransportOption.transport_type === opt.transport_type) {
-            optionCard.classList.add('selected')
-        }
-        optionCard.innerHTML = `
-            <div class="transport-option-header">
-                <div><strong>${opt.provider}</strong></div>
-                <div class="transport-price">${formatCurrency(opt.price)}</div>
+    // ── Costs summary bar ──
+    const costsBar = document.createElement('div')
+    costsBar.className = 'res-costs-bar'
+    costsBar.innerHTML = `
+        <div class="res-cost-item">
+            <span class="res-cost-icon">🏨</span>
+            <div>
+                <div class="res-cost-val">${formatCurrency(data.breakdown.accommodation.total)}</div>
+                <div class="muted res-cost-lbl">${data.breakdown.accommodation.nights} nights · ${formatCurrency(data.breakdown.accommodation.per_night)}/night</div>
             </div>
-            <div class="muted" style="font-size:12px;margin-top:6px">${opt.transport_type}</div>
-            <div class="muted" style="font-size:12px;margin-top:4px">${opt.notes || ''}</div>
-        `
-        optionCard.style.cursor = 'pointer'
-        optionCard.addEventListener('click', () => {
-            // Update selected option
-            document.querySelectorAll('.transport-option-card').forEach(card => card.classList.remove('selected'))
-            optionCard.classList.add('selected')
-            selectedTransportOption = opt
-            updateTotalWithTransport(opt)
-        })
-        transportOptions.appendChild(optionCard)
-    })
-    t.appendChild(transportOptions)
-    breakdown.appendChild(t); fadeIn(t)
-    } // end transport guard
-
-    // Accommodation
-    const a = document.createElement('div'); a.className = 'card-small';
-    a.innerHTML = `<div class='option-title'>Accommodation</div><div>${data.breakdown.accommodation.nights} nights × ${formatCurrency(data.breakdown.accommodation.per_night)}</div><div style='margin-top:8px;font-weight:700'>${formatCurrency(data.breakdown.accommodation.total)}</div>`
-    breakdown.appendChild(a); fadeIn(a)
-
-    // Food & Misc
-    const f = document.createElement('div'); f.className = 'card-small';
-    f.innerHTML = `<div class='option-title'>Daily Costs</div><div>Food: ${formatCurrency(data.breakdown.food)}</div><div>Misc: ${formatCurrency(data.breakdown.misc)}</div>`
-    breakdown.appendChild(f); fadeIn(f)
+        </div>
+        <div class="res-cost-plus">+</div>
+        <div class="res-cost-item">
+            <span class="res-cost-icon">🍽️</span>
+            <div>
+                <div class="res-cost-val">${formatCurrency(data.breakdown.food)}</div>
+                <div class="muted res-cost-lbl">Food & dining</div>
+            </div>
+        </div>
+        <div class="res-cost-plus">+</div>
+        <div class="res-cost-item">
+            <span class="res-cost-icon">📦</span>
+            <div>
+                <div class="res-cost-val">${formatCurrency(data.breakdown.misc)}</div>
+                <div class="muted res-cost-lbl">Misc & extras</div>
+            </div>
+        </div>
+    `
+    breakdown.appendChild(costsBar)
+    fadeIn(costsBar)
 }
 
 saveTripBtn?.addEventListener('click', async () => {

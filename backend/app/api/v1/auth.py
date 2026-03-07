@@ -7,7 +7,7 @@ from app.auth.security import create_access_token, get_current_user, hash_passwo
 from app.core.config import settings
 from app.db.session import get_session
 from app.models import User
-from app.schemas import UserCreate, UserLogin, UserResponse
+from app.schemas import UserCreate, UserLogin, UserResponse, UserProfileUpdate
 
 router = APIRouter(tags=["auth"])
 
@@ -90,4 +90,29 @@ def logout_user(response: Response) -> dict:
 
 @router.get("/auth/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
-    return UserResponse(id=current_user.id, email=current_user.email)
+    return UserResponse(**current_user.model_dump())
+
+
+@router.patch("/auth/me", response_model=UserResponse)
+def update_me(
+    payload: UserProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> UserResponse:
+    update_data = payload.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(current_user, field, value)
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
+    return UserResponse(**current_user.model_dump())
+
+
+@router.post("/auth/signup", response_model=UserResponse)
+def signup_user(
+    payload: UserCreate,
+    response: Response,
+    session: Session = Depends(get_session),
+) -> UserResponse:
+    """Alias for /auth/register used by the Next.js frontend."""
+    return register_user(payload, response, session)

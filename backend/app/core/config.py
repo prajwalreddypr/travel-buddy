@@ -62,6 +62,9 @@ class Settings:
     # Payment/Transport provider timeout
     provider_timeout_seconds: int = int(os.getenv("PROVIDER_TIMEOUT", "10"))
 
+    # Rome2Rio API (leave blank to use MockProvider fallback)
+    rome2rio_api_key: str = os.getenv("ROME2RIO_API_KEY", "")
+
     # Auth / JWT
     jwt_secret_key: str = os.getenv("JWT_SECRET_KEY", "change-me")
     jwt_algorithm: str = os.getenv("JWT_ALGORITHM", "HS256")

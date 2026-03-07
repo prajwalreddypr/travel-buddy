@@ -187,6 +187,25 @@ class UserResponse(BaseModel):
     phone: Optional[str] = Field(default=None, description="Phone number")
     address: Optional[str] = Field(default=None, description="Home address")
     countries_visited: Optional[int] = Field(default=None, description="Number of countries visited")
+    passport_nationality: Optional[str] = Field(default=None, description="Passport country name")
+    home_city: Optional[str] = Field(default=None, description="Home city")
+    has_schengen_visa: Optional[bool] = Field(default=None, description="Has Schengen visa")
+    has_us_visa: Optional[bool] = Field(default=None, description="Has US visa")
+    travel_style: Optional[str] = Field(default=None, description="Travel style")
+    budget_eur: Optional[int] = Field(default=None, description="Max budget in EUR")
+
+
+class UserProfileUpdate(BaseModel):
+    """Schema for updating traveler profile (onboarding)."""
+    full_name: Optional[str] = Field(default=None, max_length=120)
+    phone: Optional[str] = Field(default=None, max_length=30)
+    passport_nationality: Optional[str] = Field(default=None, max_length=80)
+    home_city: Optional[str] = Field(default=None, max_length=100)
+    has_schengen_visa: Optional[bool] = Field(default=None)
+    has_us_visa: Optional[bool] = Field(default=None)
+    travel_style: Optional[str] = Field(default=None, max_length=20)
+    budget_eur: Optional[int] = Field(default=None, ge=0)
+    countries_visited: Optional[int] = Field(default=None, ge=0)
 
 
 class SavedTripCreate(BaseModel):

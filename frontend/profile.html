@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Travel Buddy — Profile</title>
+    <title>Travel Buddy — Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,56 +19,51 @@
                 <div class="subtitle">Your dashboard</div>
             </div>
             <div class="top-right">
-                <a class="btn ghost" href="/">Back to home</a>
+                <a class="btn ghost" href="/">Home</a>
                 <button class="btn" type="button" id="logout-btn">Sign Out</button>
             </div>
         </header>
 
-        <main class="container">
-            <div class="dashboard-wrapper">
-                <!-- Top Account Section -->
-                <section class="panel account-panel">
-                    <div class="account-section">
-                        <div class="account-content">
-                            <div class="option-title">Account</div>
-                            <div id="profile-email" class="muted">Email: —</div>
-                            <div class="muted account-phone">Phone: Coming soon</div>
-                            <div class="muted account-note">More profile features coming soon</div>
-                        </div>
-                        <div id="auth-status" class="auth-status muted account-status">
-                            Loading…</div>
-                    </div>
-                </section>
+        <main class="container db-container">
 
-                <!-- Main Content Grid -->
-                <div class="dashboard-grid">
-                    <!-- Left: Saved Trips -->
-                    <section class="panel trips-panel">
-                        <div class="trips-header">
-                            <div>
-                                <h3>Saved Trips</h3>
-                                <div class="muted">Manage your trip plans</div>
-                            </div>
-                        </div>
-                        <div id="trips-list" class="trips-list-vertical"></div>
-                    </section>
-
-                    <!-- Right: Actions & Future Content -->
-                    <section class="panel actions-panel">
-                        <div class="actions-content">
-                            <div class="plan-trip-btn-wrap">
-                                <button class="btn primary plan-trip-btn" id="plan-trip-btn">
-                                    ✓ Plan New Trip
-                                </button>
-                            </div>
-                            <div class="muted">Use saved-trip AI actions from the trip cards.</div>
-                            <div id="ai-global-status" class="muted ai-global-status">AI assistant ready.</div>
-                        </div>
-                    </section>
+            <!-- Profile Hero -->
+            <section class="db-hero-card">
+                <div class="db-avatar" id="db-avatar">?</div>
+                <div class="db-hero-info">
+                    <div class="db-hero-name" id="db-profile-name">Loading…</div>
+                    <div class="db-hero-email" id="profile-email">—</div>
+                    <div class="db-hero-meta" id="db-profile-meta"></div>
                 </div>
-            </div>
+                <div class="db-hero-stats">
+                    <div class="db-stat">
+                        <div class="db-stat-value" id="db-countries">—</div>
+                        <div class="db-stat-label">Countries</div>
+                    </div>
+                    <div class="db-stat-divider"></div>
+                    <div class="db-stat">
+                        <div class="db-stat-value" id="db-trips-count">—</div>
+                        <div class="db-stat-label">Saved Trips</div>
+                    </div>
+                </div>
+                <!-- kept for JS compatibility -->
+                <div id="auth-status" class="hidden"></div>
+            </section>
+
+            <!-- Saved Trips -->
+            <section class="db-trips-card">
+                <div class="db-trips-head">
+                    <div>
+                        <h3>Saved Trips</h3>
+                        <div class="muted db-ai-status" id="ai-global-status">Manage your saved trip plans</div>
+                    </div>
+                    <button class="btn primary db-plan-btn" id="plan-trip-btn">+ Plan New Trip</button>
+                </div>
+                <div id="trips-list" class="db-trips-grid"></div>
+            </section>
+
         </main>
 
+        <!-- Chatbot Widget -->
         <div class="chatbot-widget" id="chatbot-widget">
             <button class="chatbot-toggle" id="chatbot-toggle" type="button" aria-expanded="false"
                 aria-controls="chatbot-panel">

@@ -4,6 +4,11 @@ const tripsList = document.getElementById('trips-list')
 const logoutBtn = document.getElementById('logout-btn')
 const planTripBtn = document.getElementById('plan-trip-btn')
 const aiGlobalStatus = document.getElementById('ai-global-status')
+const dbAvatar = document.getElementById('db-avatar')
+const dbProfileName = document.getElementById('db-profile-name')
+const dbProfileMeta = document.getElementById('db-profile-meta')
+const dbCountries = document.getElementById('db-countries')
+const dbTripsCount = document.getElementById('db-trips-count')
 const chatbotToggle = document.getElementById('chatbot-toggle')
 const chatbotPanel = document.getElementById('chatbot-panel')
 const chatbotClose = document.getElementById('chatbot-close')
@@ -55,6 +60,16 @@ function setAuthStatus(text) {
 
 function setAiGlobalStatus(text) {
     if (aiGlobalStatus) aiGlobalStatus.textContent = text
+}
+
+function transportIcon(type) {
+    const icons = { flight: '✈️', train: '🚆', bus: '🚌', car: '🚗', ferry: '⛴️' }
+    return icons[(type || '').toLowerCase()] || '✈️'
+}
+
+function formatTransportType(type) {
+    if (!type || type === 'any') return 'Any'
+    return type.charAt(0).toUpperCase() + type.slice(1)
 }
 
 function calculateTripDays(startDate, endDate) {
@@ -348,8 +363,15 @@ function renderTrips(trips) {
     if (!tripsList) return
     tripById.clear()
 
+    if (dbTripsCount) dbTripsCount.textContent = trips.length
+
     if (!trips.length) {
-        tripsList.innerHTML = '<div class="muted">No trips saved yet. Click "Plan New Trip" to get started.</div>'
+        tripsList.innerHTML = `
+            <div class="db-empty-state">
+                <div class="db-empty-icon">🗺️</div>
+                <div class="db-empty-title">No trips saved yet</div>
+                <div class="muted">Click "Plan New Trip" to get started</div>
+            </div>`
         return
     }
 
@@ -358,24 +380,39 @@ function renderTrips(trips) {
     }
 
     tripsList.innerHTML = trips.map(trip => {
+        const price = Number(trip.total).toLocaleString('en-US', { maximumFractionDigits: 0 })
+        const tIcon = transportIcon(trip.transport_type)
+        const tLabel = formatTransportType(trip.transport_type)
+        const tCount = trip.travelers === 1 ? '1 traveler' : `${trip.travelers} travelers`
         return `
-            <div class="trip-card-vertical" data-trip-id="${trip.id}">
-                <div class="trip-card-header">
-                    <div class="option-title">${trip.origin} → ${trip.destination}</div>
-                    <div class="trip-total">$${Number(trip.total).toFixed(2)}</div>
-                </div>
-                <div class="muted">${trip.start_date} to ${trip.end_date}</div>
-                <div class="muted" style="margin-top:4px">${trip.travelers} traveler(s)</div>
-
-                <div class="trip-card-actions">
-                    <a class="btn ghost trip-action-btn" href="/edit-trip?id=${trip.id}">Edit</a>
-                    <button class="btn primary trip-action-btn" type="button" data-action="use_chat" data-trip-id="${trip.id}">Use this saved trip in chat</button>
+            <div class="db-trip-card" data-trip-id="${trip.id}">
+                <div class="db-trip-route">
+                    <div class="db-trip-city">${trip.origin}</div>
+                    <div class="db-trip-arrow">
+                        <span class="db-trip-icon">${tIcon}</span>
+                        <div class="db-trip-line"></div>
+                    </div>
+                    <div class="db-trip-city">${trip.destination}</div>
                 </div>
 
-                <div class="trip-ai-actions">
+                <div class="db-trip-meta">
+                    <span class="db-trip-badge">${tLabel}</span>
+                    <span>📅 ${trip.start_date} – ${trip.end_date}</span>
+                    <span>👥 ${tCount}</span>
+                </div>
+
+                <div class="db-trip-footer">
+                    <div class="db-trip-price">$${price}</div>
+                    <div class="db-trip-btns">
+                        <a class="btn ghost trip-action-btn" href="/edit-trip?id=${trip.id}">Edit</a>
+                        <button class="btn primary trip-action-btn" type="button" data-action="use_chat" data-trip-id="${trip.id}">Ask AI</button>
+                    </div>
+                </div>
+
+                <div class="db-trip-ai-row">
                     <button class="btn ghost trip-action-btn" type="button" data-action="improve_itinerary" data-trip-id="${trip.id}">Improve itinerary</button>
-                    <button class="btn ghost trip-action-btn" type="button" data-action="reduce_budget_15" data-trip-id="${trip.id}">Reduce budget by 15%</button>
-                    <button class="btn ghost trip-action-btn" type="button" data-action="family_friendly" data-trip-id="${trip.id}">Family-friendly version</button>
+                    <button class="btn ghost trip-action-btn" type="button" data-action="reduce_budget_15" data-trip-id="${trip.id}">Reduce budget 15%</button>
+                    <button class="btn ghost trip-action-btn" type="button" data-action="family_friendly" data-trip-id="${trip.id}">Family-friendly</button>
                 </div>
 
                 <div id="trip-ai-output-${trip.id}" class="trip-ai-output hidden" aria-live="polite"></div>
@@ -468,9 +505,19 @@ async function loadProfile() {
         }
         const user = await meRes.json()
         setAuthStatus(`Signed in as ${user.email}`)
-        if (profileEmail) {
-            profileEmail.textContent = `Email: ${user.email}`
-        }
+
+        // Populate hero card
+        const initials = user.full_name
+            ? user.full_name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2)
+            : user.email[0].toUpperCase()
+        if (dbAvatar) dbAvatar.textContent = initials
+        if (dbProfileName) dbProfileName.textContent = user.full_name || user.email
+        if (profileEmail) profileEmail.textContent = user.email
+        const meta = []
+        if (user.phone) meta.push(`📞 ${user.phone}`)
+        if (user.address) meta.push(`📍 ${user.address}`)
+        if (dbProfileMeta) dbProfileMeta.textContent = meta.join('  ·  ')
+        if (dbCountries) dbCountries.textContent = user.countries_visited ?? '—'
 
         const tripsRes = await fetch(`${API_BASE}/api/v1/trips`, { credentials: 'include' })
         if (!tripsRes.ok) {
